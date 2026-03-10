@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务状态</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .public-page {
+            min-height: 100vh;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+        }
+        .public-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .public-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .public-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-purple) 100%);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: white;
+        }
+        .public-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .public-nav {
+            display: flex;
+            gap: 24px;
+        }
+        .public-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color var(--transition-fast);
+        }
+        .public-nav a:hover,
+        .public-nav a.active {
+            color: var(--text-primary);
+        }
+        .public-content {
+            flex: 1;
+            padding: 40px 40px;
+            width: 100%;
+        }
+
+        /* List layout */
+        #channels-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .toolbar .title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .toolbar select {
+            margin-left: 16px;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .toolbar select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        .toolbar .refresh-btn {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .toolbar .refresh-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+        .toolbar .update-time {
+            margin-left: auto;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Channel card — compact horizontal row */
+        .channel-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            transition: box-shadow var(--transition-fast);
+        }
+        .channel-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        /* Row 1: name / status / api / rate */
+        .svc-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .svc-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .svc-dot.green { background: var(--accent-success); box-shadow: 0 0 6px var(--accent-success); }
+        .svc-dot.orange { background: var(--accent-warning); box-shadow: 0 0 6px var(--accent-warning); }
+        .svc-dot.red { background: var(--accent-danger); box-shadow: 0 0 6px var(--accent-danger); }
+        .svc-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+        .svc-badge {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .svc-badge svg { width: 12px; height: 12px; }
+        .svc-badge.ok { color: var(--accent-success); }
+        .svc-badge.degraded { color: var(--accent-warning); }
+        .svc-badge.down { color: var(--accent-danger); }
+        .svc-latency {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .svc-rate {
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .svc-rate.high { color: var(--accent-success); }
+        .svc-rate.mid { color: var(--accent-warning); }
+        .svc-rate.low { color: var(--accent-danger); }
+        .svc-sep {
+            width: 1px;
+            height: 16px;
+            background: var(--border-color);
+            flex-shrink: 0;
+        }
+        .svc-desc-inline {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 280px;
+        }
+        .svc-api-inline {
+            font-size: 11px;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .svc-api-inline:hover {
+            color: var(--accent-primary);
+            background: var(--bg-elevated);
+        }
+        .svc-spacer { flex: 1; min-width: 0; }
+
+        /* Row 2: timeline bar */
+        .timeline {
+            display: flex;
+            gap: 2px;
+            height: 24px;
+            align-items: stretch;
+            margin-top: 10px;
+        }
+        .t-slot {
+            flex: 1;
+            min-width: 3px;
+            border-radius: 2px;
+            cursor: default;
+            position: relative;
+            transition: opacity .1s;
+        }
+        .t-slot:hover { opacity: 0.8; }
+        .t-slot.ok { background: var(--accent-success); }
+        .t-slot.warn { background: var(--accent-warning); }
+        .t-slot.err { background: var(--accent-danger); }
+        .t-slot.empty { background: var(--border-color); opacity: 0.3; }
+
+        /* Tooltip */
+        .t-slot .tip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 11px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            z-index: 10;
+            pointer-events: none;
+            line-height: 1.5;
+            box-shadow: var(--shadow-md);
+        }
+        .t-slot:hover .tip { display: block; }
+
+        /* Loading */
+        .loading-box {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .loading-box .spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            margin: 0 auto 14px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+        }
+
+        /* Row 3: models — single scrollable line */
+        .svc-models {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .svc-models::-webkit-scrollbar { display: none; }
+        .svc-models-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .model-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .model-chip .m-name { font-weight: 500; color: var(--text-primary); }
+        .model-chip .m-price { font-family: 'SF Mono', monospace; font-size: 10px; color: var(--text-muted); }
+
+        @media (max-width: 768px) {
+            .public-content { padding: 20px; }
+            .svc-row { flex-wrap: wrap; }
+            .svc-desc-inline { max-width: 160px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="public-page">
+        <script src="/js/public-header.js"></script>
+        <script>renderPublicHeader('status');</script>
+
+        <main class="public-content">
+            <div class="toolbar">
+                <span class="title">服务状态</span>
+                <select id="hours-select">
+                    <option value="1" selected>最近 1 小时</option>
+                    <option value="6">最近 6 小时</option>
+                    <option value="24">最近 24 小时</option>
+                    <option value="72">最近 3 天</option>
+                    <option value="168">最近 7 天</option>
+                </select>
+                <button class="refresh-btn" id="refresh-btn">刷新</button>
+                <span class="update-time" id="update-time"></span>
+            </div>
+
+            <div id="content-area">
+                <div class="loading-box" id="loading">
+                    <div class="spinner"></div>
+                    加载中...
+                </div>
+                <div id="channels-list" style="display:none;"></div>
+                <div class="empty-state" id="empty-state" style="display:none;">暂无数据</div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    (function() {
+        const API_BASE = location.origin;
+        let channelConfig = {}; // name -> { apiPath, displayName, description, models }
+
+        const hoursSelect = document.getElementById('hours-select');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const loadingEl = document.getElementById('loading');
+        const listEl = document.getElementById('channels-list');
+        const emptyEl = document.getElementById('empty-state');
+        const updateTimeEl = document.getElementById('update-time');
+
+        async function loadChannelConfig() {
+            try {
+                const res = await fetch('/api/public/channels');
+                const json = await res.json();
+                if (json.success && json.data) {
+                    json.data.forEach(ch => { channelConfig[ch.name] = ch; });
+                }
+            } catch(e) {}
+        }
+
+        async function load() {
+            loadingEl.style.display = '';
+            listEl.style.display = 'none';
+            emptyEl.style.display = 'none';
+
+            try {
+                const [, statsRes] = await Promise.all([
+                    Object.keys(channelConfig).length === 0 ? loadChannelConfig() : Promise.resolve(),
+                    fetch('/api/public/channel-stats?hours=' + hoursSelect.value)
+                ]);
+                const json = await statsRes.json();
+                if (!json.success) throw new Error(json.error);
+                render(json.data);
+                updateTimeEl.textContent = '更新于 ' + new Date().toLocaleTimeString();
+            } catch (e) {
+                emptyEl.textContent = '加载失败: ' + e.message;
+                emptyEl.style.display = '';
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        function render(data) {
+            const { summary, timeline } = data;
+            if ((!summary || summary.length === 0) && (!timeline || timeline.length === 0)) {
+                emptyEl.style.display = '';
+                return;
+            }
+
+            const sumMap = {};
+            (summary || []).forEach(s => { sumMap[s.channel] = s; });
+
+            const tlMap = {};
+            (timeline || []).forEach(t => { tlMap[t.channel] = t.slots; });
+
+            const channels = [...new Set([
+                ...(summary || []).map(s => s.channel),
+                ...(timeline || []).map(t => t.channel)
+            ])];
+
+            let html = '';
+            for (const ch of channels) {
+                const s = sumMap[ch] || {};
+                const slots = tlMap[ch] || [];
+                const rate = parseFloat(s.successRate || '0');
+                const latency = s.avgDurationMs || 0;
+
+                const dotCls = rate >= 95 ? 'green' : rate >= 80 ? 'orange' : 'red';
+                const badgeCls = rate >= 95 ? 'ok' : rate >= 80 ? 'degraded' : 'down';
+                const badgeText = rate >= 95 ? '正常' : rate >= 80 ? '降级' : '异常';
+                const rateCls = rate >= 95 ? 'high' : rate >= 80 ? 'mid' : 'low';
+
+                const cfg = channelConfig[ch] || {};
+                const displayName = cfg.displayName || ch;
+                const apiPath = cfg.apiPath || '';
+                const desc = cfg.description || '';
+
+                html += `
+                <div class="channel-card">
+                    <div class="svc-row">
+                        <span class="svc-dot ${dotCls}"></span>
+                        <span class="svc-name">${esc(displayName)}</span>
+                        <span class="svc-badge ${badgeCls}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                            ${badgeText}
+                        </span>
+                        <span class="svc-latency">${latency > 0 ? latency + 'ms' : '-'}</span>
+                        <span class="svc-rate ${rateCls}">${rate.toFixed(2)}%</span>${desc ? '<span class="svc-sep"></span><span class="svc-desc-inline" title="' + esc(desc) + '">' + esc(desc) + '</span>' : ''}${apiPath ? '<span class="svc-spacer"></span><span class="svc-api-inline" title="\u70b9\u51fb\u590d\u5236" onclick="navigator.clipboard.writeText(\'' + (API_BASE + apiPath) + '\');this.textContent=\'\u5df2\u590d\u5236\';setTimeout(()=>{this.textContent=\'' + (API_BASE + apiPath) + '\'},1000)">' + (API_BASE + apiPath) + '</span>' : ''}
+                    </div>
+                    <div class="timeline">${renderTimeline(slots)}</div>${renderModels(ch)}
+                </div>`;
+            }
+
+            listEl.innerHTML = html;
+            listEl.style.display = '';
+        }
+
+        function renderModels(channel) {
+            const cfg = channelConfig[channel];
+            if (!cfg || !cfg.models || cfg.models.length === 0) return '';
+
+            let html = '<div class="svc-models">';
+            html += '<span class="svc-models-label">\u6a21\u578b</span>';
+            cfg.models.forEach(function(m) {
+                const price = '$' + m.inputPrice + ' / $' + m.outputPrice;
+                html += '<span class="model-chip">' +
+                    '<span class="m-name">' + esc(m.modelName) + '</span>' +
+                    '<span class="m-price">' + price + '</span>' +
+                    '</span>';
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function renderTimeline(slots) {
+            if (!slots || slots.length === 0) {
+                let h = '';
+                for (let i = 0; i < 48; i++) h += '<div class="t-slot empty"></div>';
+                return h;
+            }
+
+            return slots.map(s => {
+                const rate = s.total > 0 ? (s.success / s.total) * 100 : -1;
+                let cls;
+                if (rate < 0) cls = 'empty';
+                else if (rate >= 95) cls = 'ok';
+                else if (rate >= 80) cls = 'warn';
+                else cls = 'err';
+
+                const timeStr = formatSlotTime(s.time);
+                const tipContent = rate < 0
+                    ? timeStr + '<br>无请求'
+                    : timeStr + '<br>成功: ' + s.success + ' / ' + s.total
+                      + '<br>连通率: ' + rate.toFixed(1) + '%'
+                      + (s.avgMs > 0 ? '<br>耗时: ' + s.avgMs + 'ms' : '');
+
+                return '<div class="t-slot ' + cls + '"><div class="tip">' + tipContent + '</div></div>';
+            }).join('');
+        }
+
+        function formatSlotTime(t) {
+            if (!t) return '';
+            const d = new Date(t);
+            if (isNaN(d.getTime())) return String(t);
+            return (d.getMonth()+1) + '/' + d.getDate() + ' ' +
+                   String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+        }
+
+        function esc(str) {
+            const d = document.createElement('div');
+            d.textContent = str || 'unknown';
+            return d.innerHTML;
+        }
+
+        hoursSelect.addEventListener('change', load);
+        refreshBtn.addEventListener('click', load);
+        load();
+    })();
+    </script>
+</body>
+</html>

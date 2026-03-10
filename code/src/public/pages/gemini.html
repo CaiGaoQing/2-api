@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini 账号管理 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon gemini">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">Gemini 账号管理</h1>
+                            <p class="page-subtitle">管理 Gemini Antigravity OAuth 凭证</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-center">
+                    <div class="search-box">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="search-input" placeholder="搜索账号...">
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-primary" id="add-account-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加账号
+                    </button>
+                    <button class="btn btn-secondary" id="batch-import-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        批量导入
+                    </button>
+                </div>
+            </header>
+
+            <!-- Statistics Cards -->
+            <div class="stats-cards" id="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #4285f4, #34a853);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-total-accounts">0</div>
+                        <div class="stat-label">总账号数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-active-accounts">0</div>
+                        <div class="stat-label">活跃账号</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-total-models">0</div>
+                        <div class="stat-label">可用模型</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-avg-quota">-</div>
+                        <div class="stat-label">平均额度</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area" id="gemini-page">
+                <div class="content-header">
+                    <div class="content-header-left">
+                        <div class="select-all-wrapper">
+                            <input type="checkbox" class="checkbox-custom" id="select-all">
+                            <label class="select-label" for="select-all">全选</label>
+                        </div>
+                        <span class="account-count">共 <strong id="displayed-count">0</strong> 个账号</span>
+                    </div>
+                    <div class="content-header-right">
+                        <button class="btn btn-secondary btn-sm" id="refresh-all-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                            批量刷新Token
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="batch-delete-btn" style="display: none;">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            批量删除
+                        </button>
+                    </div>
+                </div>
+
+                <div class="cards-grid" id="cards-grid"></div>
+
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <h3 class="empty-title">暂无 Gemini 账号</h3>
+                    <p class="empty-description">您还没有添加任何 Gemini 账号，点击下方按钮开始添加您的第一个账号</p>
+                    <button class="btn btn-primary" id="empty-add-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加账号
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Account Modal -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">添加 Gemini 账号</h2>
+                <button class="modal-close" id="modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="add-account-form">
+                    <div class="form-group">
+                        <label class="form-label">名称 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="account-name" placeholder="账号名称" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">邮箱</label>
+                        <input type="email" class="form-input" id="account-email" placeholder="user@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Access Token <span class="required">*</span></label>
+                        <textarea class="form-textarea" id="access-token" placeholder="粘贴 Access Token..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Refresh Token</label>
+                        <textarea class="form-textarea" id="refresh-token" placeholder="粘贴 Refresh Token..."></textarea>
+                        <p class="form-hint">用于自动刷新 Access Token</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Project ID</label>
+                        <input type="text" class="form-input" id="project-id" placeholder="antigravity-project-xxx">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel">取消</button>
+                <button class="btn btn-primary" id="modal-submit">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    添加账号
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Import Modal -->
+    <div class="modal-overlay" id="batch-import-modal">
+        <div class="modal" style="max-width: 640px;">
+            <div class="modal-header">
+                <h2 class="modal-title">批量导入 Gemini 账号</h2>
+                <button class="modal-close" id="batch-modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">账号数据 <span class="required">*</span></label>
+                    <textarea class="form-textarea" id="batch-json" style="min-height: 200px; font-family: monospace; font-size: 12px;" placeholder='支持两种格式:
+
+1. 文本格式 (每行一个账号，空格分隔):
+name accessToken refreshToken projectId
+user1 ya29.xxx... 1//xxx... project-123
+
+2. JSON 格式:
+[
+  {"name": "user1", "email": "user1@example.com", "accessToken": "ya29.xxx...", "refreshToken": "1//xxx...", "projectId": "project-123"}
+]'></textarea>
+                    <p class="form-hint">支持文本格式 (name accessToken refreshToken projectId) 或 JSON 数组格式</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="batch-modal-cancel">取消</button>
+                <button class="btn btn-primary" id="batch-modal-submit">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    导入
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="context-menu">
+        <div class="context-menu-item" data-action="chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            对话
+        </div>
+        <div class="context-menu-item" data-action="activate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            设为活跃
+        </div>
+        <div class="context-menu-item" data-action="refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            刷新令牌
+        </div>
+        <div class="context-menu-item" data-action="test">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+            测试连接
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item danger" data-action="delete">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+            删除
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/gemini.js"></script>
+</body>
+</html>

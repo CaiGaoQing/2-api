@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>申请试用</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .public-page {
+            min-height: 100vh;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+        }
+        .public-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .public-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .public-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-purple) 100%);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: white;
+        }
+        .public-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .public-nav {
+            display: flex;
+            gap: 24px;
+        }
+        .public-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color var(--transition-fast);
+        }
+        .public-nav a:hover,
+        .public-nav a.active {
+            color: var(--text-primary);
+        }
+        .public-content {
+            flex: 1;
+            padding: 40px 60px;
+            width: 100%;
+        }
+        .apply-card {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+        }
+        .page-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .page-subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .form-label .required {
+            color: var(--accent-danger);
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-primary-glow);
+        }
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: var(--text-muted);
+        }
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .upload-area:hover {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        .upload-area.has-file {
+            border-color: var(--accent-success);
+            background: rgba(34, 197, 94, 0.05);
+        }
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            color: var(--text-muted);
+        }
+        .upload-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .upload-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .upload-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: var(--radius-md);
+            margin-top: 12px;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+            color: white;
+            box-shadow: 0 2px 8px var(--accent-primary-glow);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px var(--accent-primary-glow);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .message {
+            padding: 12px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .message.show {
+            display: block;
+        }
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--accent-danger);
+        }
+        .message.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: var(--accent-success);
+        }
+        .links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        .links a {
+            font-size: 13px;
+            color: var(--accent-primary);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+        .links a:hover {
+            color: var(--accent-primary-hover);
+        }
+        .hidden-input {
+            display: none;
+        }
+        /* 步骤说明 */
+        .steps-guide {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .steps-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .steps-title svg {
+            width: 18px;
+            height: 18px;
+            color: var(--accent-primary);
+        }
+        .steps-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .step-number {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+        .step-content {
+            flex: 1;
+        }
+        .step-content strong {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        .step-content p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.5;
+        }
+        /* 成功结果卡片 */
+        .success-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-success);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-top: 20px;
+            display: none;
+        }
+        .success-card.show {
+            display: block;
+        }
+        .success-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            color: var(--accent-success);
+        }
+        .success-header svg {
+            width: 24px;
+            height: 24px;
+        }
+        .success-header span {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .api-key-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+        .api-key-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+        }
+        .api-key-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .api-key-input {
+            flex: 1;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 12px;
+            word-break: break-all;
+            user-select: all;
+        }
+        .btn-copy {
+            padding: 10px 16px;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-copy:hover {
+            background: var(--accent-primary-hover);
+        }
+        .btn-copy svg {
+            width: 16px;
+            height: 16px;
+        }
+        .api-key-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+        .copy-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--accent-success);
+            color: white;
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .copy-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .copy-toast.error {
+            background: var(--accent-danger);
+        }
+        @media (max-width: 768px) {
+            .public-header {
+                padding: 16px 20px;
+            }
+            .public-content {
+                padding: 20px;
+            }
+            .apply-card {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="public-page">
+        <script src="/js/public-header.js"></script>
+        <script>renderPublicHeader('trial-apply');</script>
+
+        <main class="public-content">
+            <div class="apply-card">
+                <h1 class="page-title">申请试用</h1>
+                <p class="page-subtitle">填写以下信息申请 API 试用资格</p>
+
+                <div class="message" id="message"></div>
+
+                <!-- 步骤说明 -->
+                <div class="steps-guide">
+                    <div class="steps-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            <path d="M9 12l2 2 4-4"/>
+                        </svg>
+                        申请流程
+                    </div>
+                    <div class="steps-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <p><strong>填写信息</strong> - 填写咸鱼名称、邮箱等基本信息</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <p><strong>上传截图</strong> - 如有咸鱼订单，上传截图可加快审批</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <p><strong>等待审核</strong> - 提交后等待管理员审核（通常 24 小时内）</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <p><strong>获取 Key</strong> - 审核通过后，在此页面或查询页面获取 API Key</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 成功结果卡片 -->
+                <div class="success-card" id="success-card">
+                    <div class="success-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        <span>申请已通过，以下是您的 API Key</span>
+                    </div>
+                    <div class="api-key-box">
+                        <div class="api-key-label">API Key</div>
+                        <div class="api-key-wrapper">
+                            <input type="text" class="api-key-input" id="api-key-input" readonly>
+                            <button type="button" class="btn-copy" onclick="copyApiKey()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                </svg>
+                                复制
+                            </button>
+                        </div>
+                        <div class="api-key-hint">请妥善保管您的 API Key，不要泄露给他人。如需帮助，请查看 <a href="/pages/docs.html">接入教程</a></div>
+                    </div>
+                </div>
+
+                <form id="apply-form">
+                    <div class="form-group">
+                        <label class="form-label">咸鱼名称 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="xianyu-name" placeholder="请输入您的咸鱼用户名" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">邮箱 <span class="required">*</span></label>
+                        <input type="email" class="form-input" id="email" placeholder="用于接收审批结果和 API Key" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">来源</label>
+                        <select class="form-select" id="source">
+                            <option value="">请选择</option>
+                            <option value="xianyu">咸鱼</option>
+                            <option value="github">GitHub</option>
+                            <option value="twitter">Twitter/X</option>
+                            <option value="friend">朋友推荐</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">订单截图</label>
+                        <div class="upload-area" id="upload-area">
+                            <input type="file" class="hidden-input" id="screenshot-input" accept="image/*">
+                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            <div class="upload-text">点击或拖拽上传截图</div>
+                            <div class="upload-hint">支持 JPG、PNG 格式，最大 5MB</div>
+                            <img class="upload-preview" id="preview" style="display: none;">
+                        </div>
+                        <p class="form-hint">如有咸鱼订单，请上传订单截图以加快审批</p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="submit-btn">提交申请</button>
+                </form>
+
+                <div class="links">
+                    <a href="/pages/trial-query.html">查询申请状态</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="copy-toast" id="copy-toast">已复制到剪贴板</div>
+
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const screenshotInput = document.getElementById('screenshot-input');
+        const preview = document.getElementById('preview');
+        let screenshotBase64 = null;
+
+        // 兼容性复制函数
+        function copyToClipboard(text) {
+            // 优先使用现代 API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                return navigator.clipboard.writeText(text);
+            }
+            // 降级方案：使用 execCommand
+            return new Promise((resolve, reject) => {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                textArea.style.top = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    if (successful) {
+                        resolve();
+                    } else {
+                        reject(new Error('execCommand copy failed'));
+                    }
+                } catch (err) {
+                    document.body.removeChild(textArea);
+                    reject(err);
+                }
+            });
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('copy-toast');
+            toast.textContent = message;
+            toast.className = isError ? 'copy-toast show error' : 'copy-toast show';
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function copyApiKey() {
+            const apiKey = document.getElementById('api-key-input').value;
+            if (!apiKey) return;
+
+            copyToClipboard(apiKey)
+                .then(() => showToast('已复制到剪贴板'))
+                .catch(() => {
+                    // 如果复制失败，选中文本让用户手动复制
+                    const input = document.getElementById('api-key-input');
+                    input.select();
+                    input.setSelectionRange(0, 99999);
+                    showToast('请按 Ctrl+C 手动复制', true);
+                });
+        }
+
+        function showSuccessCard(apiKey) {
+            document.getElementById('api-key-input').value = apiKey;
+            document.getElementById('success-card').classList.add('show');
+            document.getElementById('apply-form').style.display = 'none';
+        }
+
+        function hideSuccessCard() {
+            document.getElementById('success-card').classList.remove('show');
+            document.getElementById('apply-form').style.display = 'block';
+        }
+
+        // 点击上传区域触发文件选择
+        uploadArea.addEventListener('click', () => screenshotInput.click());
+
+        // 拖拽上传
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--accent-primary)';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '';
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFile(file);
+            }
+        });
+
+        // 文件选择
+        screenshotInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            if (file.size > 5 * 1024 * 1024) {
+                showMessage('图片大小不能超过 5MB', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                screenshotBase64 = e.target.result;
+                preview.src = screenshotBase64;
+                preview.style.display = 'block';
+                uploadArea.classList.add('has-file');
+                uploadArea.querySelector('.upload-text').textContent = '已选择图片，点击更换';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message show ${type}`;
+        }
+
+        function hideMessage() {
+            document.getElementById('message').className = 'message';
+        }
+
+        document.getElementById('apply-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessage();
+
+            const xianyuName = document.getElementById('xianyu-name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const source = document.getElementById('source').value;
+
+            if (!xianyuName || !email) {
+                showMessage('请填写必填项', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.textContent = '提交中...';
+
+            try {
+                const res = await fetch('/api/trial/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        xianyuName,
+                        email,
+                        source,
+                        orderScreenshot: screenshotBase64
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    // 检查是否返回了 API Key（已通过的申请）
+                    if (data.data && data.data.apiKey) {
+                        showSuccessCard(data.data.apiKey);
+                        showMessage('您的申请已通过，API Key 如下', 'success');
+                    } else {
+                        showMessage('申请提交成功！请等待审核，审核结果将通过邮箱通知。', 'success');
+                        document.getElementById('apply-form').reset();
+                        preview.style.display = 'none';
+                        uploadArea.classList.remove('has-file');
+                        uploadArea.querySelector('.upload-text').textContent = '点击或拖拽上传截图';
+                        screenshotBase64 = null;
+                    }
+                } else {
+                    // 检查是否是已存在且已通过的申请
+                    if (data.data && data.data.apiKey) {
+                        showSuccessCard(data.data.apiKey);
+                        showMessage('您已有通过的申请，API Key 如下', 'success');
+                    } else {
+                        showMessage(data.error || '提交失败，请重试', 'error');
+                    }
+                }
+            } catch (error) {
+                showMessage('网络错误，请重试', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '提交申请';
+            }
+        });
+
+        // 加载站点设置
+        (async function() {
+            // 先从缓存加载（避免闪烁）
+            const cached = localStorage.getItem('siteSettings');
+            if (cached) {
+                try {
+                    const settings = JSON.parse(cached);
+                    document.getElementById('logo-icon').textContent = settings.siteLogo || 'K';
+                    document.getElementById('logo-text').textContent = `${settings.siteName || 'Kiro'} API`;
+                    document.title = `申请试用 - ${settings.siteName || 'Kiro'} API`;
+                } catch (e) {}
+            }
+            // 再从服务器获取最新
+            try {
+                const res = await fetch('/api/site-settings');
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const settings = data.data;
+                    localStorage.setItem('siteSettings', JSON.stringify(settings));
+                    document.getElementById('logo-icon').textContent = settings.siteLogo || 'K';
+                    document.getElementById('logo-text').textContent = `${settings.siteName || 'Kiro'} API`;
+                    document.title = `申请试用 - ${settings.siteName || 'Kiro'} API`;
+                }
+            } catch (e) {
+                console.error('Load site settings error:', e);
+            }
+        })();
+    </script>
+</body>
+</html>

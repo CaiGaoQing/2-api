@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct 转发通道 - All-2-API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 14 20 9 15 4"/>
+                                <path d="M4 20v-7a4 4 0 0 1 4-4h12"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">Direct 转发通道</h1>
+                            <p class="page-subtitle">Claude/Anthropic 格式直接转发，配置上游 URL 和 Key 即可透传</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-primary" id="add-channel-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加通道
+                    </button>
+                </div>
+            </header>
+
+            <!-- Statistics Cards -->
+            <div class="stats-cards" id="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 14 20 9 15 4"/>
+                            <path d="M4 20v-7a4 4 0 0 1 4-4h12"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">总通道</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-active">0</div>
+                        <div class="stat-label">活跃</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <div class="content-header">
+                    <div class="content-header-left">
+                        <span class="account-count">共 <strong id="displayed-count">0</strong> 个通道</span>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table" id="channel-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>名称</th>
+                                <th>上游 URL</th>
+                                <th>API Key</th>
+                                <th>状态</th>
+                                <th>使用次数</th>
+                                <th>失败</th>
+                                <th>最后使用</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="channel-tbody"></tbody>
+                    </table>
+                </div>
+
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <polyline points="15 14 20 9 15 4"/>
+                        <path d="M4 20v-7a4 4 0 0 1 4-4h12"/>
+                    </svg>
+                    <h3 class="empty-title">暂无转发通道</h3>
+                    <p class="empty-description">点击上方"添加通道"配置上游 API 地址和 Key</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Channel Modal -->
+    <div class="modal-overlay" id="channel-modal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">添加转发通道</h2>
+                <button class="modal-close" id="modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="channel-form">
+                    <input type="hidden" id="edit-id">
+                    <div class="form-group">
+                        <label class="form-label">通道名称 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="input-name" placeholder="例如: 主力通道" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">上游 URL <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="input-url" placeholder="https://api.example.com/v1/messages" required>
+                        <p class="form-hint">Anthropic Messages 格式的完整 URL</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">API Key <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="input-key" placeholder="sk-..." required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <input type="text" class="form-input" id="input-note" placeholder="可选备注">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel">取消</button>
+                <button class="btn btn-primary" id="modal-submit">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/direct.js"></script>
+</body>
+</html>

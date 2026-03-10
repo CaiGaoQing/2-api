@@ -1,0 +1,1182 @@
+/**
+ * Kiro API Service - 参考 AIClient-2-API 的实现
+ */
+import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid';
+import * as os from 'os';
+import * as crypto from 'crypto';
+import * as http from 'http';
+import * as https from 'https';
+import { KIRO_CONSTANTS, MODEL_MAPPING, KIRO_MODELS, buildCodeWhispererUrl } from '../constants.js';
+import { getAxiosProxyConfig } from '../proxy.js';
+import { logger } from '../logger.js';
+import { ToolCallLogStore } from '../db.js';
+
+const log = logger.client;
+
+// 工具调用日志存储（延迟初始化，使用 Promise 缓存避免重复创建）
+let toolCallLogStorePromise = null;
+function getToolCallLogStore() {
+    if (!toolCallLogStorePromise) {
+        toolCallLogStorePromise = ToolCallLogStore.create();
+    }
+    return toolCallLogStorePromise;
+}
+
+// 预编译正则表达式（性能优化）
+const REGEX_ILLEGAL_ESCAPE = /\\([^nrtbf\\"\/u0-7])/g;
+const REGEX_INCOMPLETE_UNICODE = /\\u(?![0-9a-fA-F]{4})/g;
+const REGEX_UNESCAPED_NEWLINE = /([^\\])(\r?\n)(?=[^"]*"[,}\]])/g;
+const REGEX_SEARCH_QUERY = /(?:web search for the query:|搜索|search for)[:\s]*(.+)/i;
+
+// MCP 端点 URL
+const MCP_URL_TEMPLATE = 'https://q.{{region}}.amazonaws.com/mcp';
+
+function generateMachineId(credential) {
+    const uniqueKey = credential.profileArn || credential.clientId || 'KIRO_DEFAULT';
+    return crypto.createHash('sha256').update(uniqueKey).digest('hex');
+}
+
+function getSystemInfo() {
+    const platform = os.platform();
+    const release = os.release();
+    const nodeVersion = process.version.replace('v', '');
+    let osName = platform;
+    if (platform === 'win32') osName = `windows#${release}`;
+    else if (platform === 'darwin') osName = `macos#${release}`;
+    else osName = `${platform}#${release}`;
+    return { osName, nodeVersion };
+}
+
+export class KiroService {
+    constructor(credential) {
+        this.credential = credential;
+        this.accessToken = credential.accessToken;
+        this.refreshToken = credential.refreshToken;
+        // 去除 profileArn 中的空白字符（防止末尾有 Tab/空格导致 403 错误）
+        this.profileArn = credential.profileArn ? credential.profileArn.trim() : credential.profileArn;
+        this.clientId = credential.clientId;
+        this.clientSecret = credential.clientSecret;
+        this.authMethod = credential.authMethod || KIRO_CONSTANTS.AUTH_METHOD_SOCIAL;
+        this.region = credential.region || KIRO_CONSTANTS.DEFAULT_REGION;
+        this.expiresAt = credential.expiresAt;
+        
+        // Q Agent URL (用于 WebSearch)
+        this.qAgentUrl = buildCodeWhispererUrl(KIRO_CONSTANTS.Q_AGENT_URL, this.region);
+
+        const httpAgent = new http.Agent({
+            keepAlive: true,
+            maxSockets: 100,
+            maxFreeSockets: 5,
+            timeout: KIRO_CONSTANTS.AXIOS_TIMEOUT,
+        });
+        const httpsAgent = new https.Agent({
+            keepAlive: true,
+            maxSockets: 100,
+            maxFreeSockets: 5,
+            timeout: KIRO_CONSTANTS.AXIOS_TIMEOUT,
+        });
+
+        const machineId = generateMachineId(credential);
+        const { osName, nodeVersion } = getSystemInfo();
+        const kiroVersion = KIRO_CONSTANTS.KIRO_VERSION;
+
+        const axiosConfig = {
+            timeout: KIRO_CONSTANTS.AXIOS_TIMEOUT,
+            httpAgent,
+            httpsAgent,
+            headers: {
+                'Content-Type': KIRO_CONSTANTS.CONTENT_TYPE_JSON,
+                'Accept': KIRO_CONSTANTS.ACCEPT_JSON,
+                'amz-sdk-request': 'attempt=1; max=1',
+                'x-amzn-kiro-agent-mode': 'spec',
+                'x-amz-user-agent': `aws-sdk-js/1.0.0 KiroIDE-${kiroVersion}-${machineId}`,
+                'user-agent': `aws-sdk-js/1.0.0 ua/2.1 os/${osName} lang/js md/nodejs#${nodeVersion} api/codewhispererruntime#1.0.0 m/E KiroIDE-${kiroVersion}-${machineId}`,
+                'Connection': 'keep-alive'
+            },
+        };
+
+        const proxyConfig = getAxiosProxyConfig();
+        if (proxyConfig.proxy === false) {
+            axiosConfig.proxy = false;
+        } else if (proxyConfig.httpsAgent) {
+            axiosConfig.httpsAgent = proxyConfig.httpsAgent;
+        }
+
+        this.axiosInstance = axios.create(axiosConfig);
+        this.baseUrl = buildCodeWhispererUrl(KIRO_CONSTANTS.BASE_URL, this.region);
+        // MCP URL (用于直接调用工具)
+        this.mcpUrl = buildCodeWhispererUrl(MCP_URL_TEMPLATE, this.region);
+    }
+
+    /**
+     * 使用 MCP 端点直接调用 web_search 工具
+     * @param {string} query - 搜索查询
+     * @returns {Promise<object>} 搜索结果
+     */
+    async callMcpWebSearch(query) {
+        const requestId = `web_search_${uuidv4().replace(/-/g, '_').substring(0, 8)}`;
+        const requestData = {
+            id: requestId,
+            jsonrpc: '2.0',
+            method: 'tools/call',
+            params: {
+                name: 'web_search',
+                arguments: { query }
+            }
+        };
+
+        const headers = {
+            ...this.axiosInstance.defaults.headers.common,
+            'Authorization': `Bearer ${this.accessToken}`,
+            'amz-sdk-invocation-id': uuidv4(),
+        };
+
+        console.log(`[KiroService] MCP web_search 请求: ${query}`);
+        
+        try {
+            const response = await this.axiosInstance.post(this.mcpUrl, requestData, { headers });
+            
+            if (response.data?.error) {
+                console.error('[KiroService] MCP web_search 错误:', response.data.error);
+                return { success: false, error: response.data.error.message || 'MCP 搜索失败' };
+            }
+
+            const result = response.data?.result;
+            console.log('[KiroService] MCP web_search 成功，结果:', JSON.stringify(result).substring(0, 500));
+            
+            return { success: true, result };
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || error.message;
+            const status = error.response?.status;
+            console.error(`[KiroService] MCP web_search 失败: ${errorMsg} (status: ${status})`);
+            return { success: false, error: errorMsg, statusCode: status };
+        }
+    }
+
+    /**
+     * 格式化 MCP 搜索结果为文本
+     */
+    formatMcpSearchResult(result) {
+        if (!result || !result.content) {
+            return '搜索未返回结果。';
+        }
+
+        // MCP 结果格式: { content: [{ type: 'text', text: '...' }] }
+        if (Array.isArray(result.content)) {
+            return result.content
+                .filter(item => item.type === 'text' && item.text)
+                .map(item => item.text)
+                .join('\n');
+        }
+
+        return typeof result.content === 'string' ? result.content : JSON.stringify(result.content);
+    }
+
+    /**
+     * 检查是否包含 WebSearch 工具
+     */
+    hasWebSearchTool(tools) {
+        if (!tools || !Array.isArray(tools)) return false;
+        const toolNames = tools.map(tool => tool.name || tool.toolSpecification?.name || '').filter(n => n);
+        // 只检测 web_search（小写），WebSearch 是 Cursor 内置工具，每个请求都有
+        // 真正执行搜索的请求会只包含 web_search 工具
+        const hasWS = tools.length === 1 && tools.some(tool => {
+            const name = tool.name || tool.toolSpecification?.name || '';
+            return name === 'web_search';
+        });
+        if (hasWS) {
+            console.log('[KiroService] 检测到独立的 web_search 请求');
+        }
+        return hasWS;
+    }
+
+    /**
+     * 获取 Kiro Profile（用于获取 profileArn）
+     * @returns {Promise<Object|null>} profile 信息或 null
+     */
+    async getProfile() {
+        const baseUrl = this.qAgentUrl.replace('/generateAssistantResponse', '');
+        const headers = {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+        };
+        
+        // 如果已有 profileArn，直接查询
+        if (this.profileArn) {
+            try {
+                const response = await this.axiosInstance.post(`${baseUrl}/GetProfile`, 
+                    { profileArn: this.profileArn }, { headers });
+                if (response.data && response.data.profile) {
+                    return response.data.profile;
+                }
+            } catch (error) {
+                console.error('[KiroService] GetProfile 失败:', error.message);
+            }
+            return null;
+        }
+        
+        // 没有 profileArn 时，尝试 ListProfiles 获取
+        try {
+            console.log('[KiroService] 尝试 ListProfiles...');
+            const response = await this.axiosInstance.post(`${baseUrl}/ListProfiles`, {}, { headers });
+            console.log('[KiroService] ListProfiles 响应:', JSON.stringify(response.data).substring(0, 500));
+            if (response.data && response.data.profiles && response.data.profiles.length > 0) {
+                const profile = response.data.profiles[0];
+                console.log('[KiroService] 从 ListProfiles 获取 profileArn:', profile.arn);
+                return profile;
+            }
+        } catch (error) {
+            console.log('[KiroService] ListProfiles 失败:', error.message);
+        }
+        
+        // 尝试 CreateProfile（自动创建）
+        try {
+            console.log('[KiroService] 尝试 CreateProfile...');
+            const response = await this.axiosInstance.post(`${baseUrl}/CreateProfile`, {
+                profileName: `KiroProfile-${this.region}`,
+                profileType: 'KIRO'
+            }, { headers });
+            console.log('[KiroService] CreateProfile 响应:', JSON.stringify(response.data).substring(0, 500));
+            if (response.data && response.data.profile) {
+                return response.data.profile;
+            }
+        } catch (error) {
+            console.log('[KiroService] CreateProfile 失败:', error.message);
+        }
+        
+        return null;
+    }
+
+    /**
+     * 自动获取并设置 profileArn（如果缺少的话）
+     */
+    async ensureProfileArn() {
+        if (this.profileArn) {
+            return this.profileArn;
+        }
+        
+        const profile = await this.getProfile();
+        if (profile && profile.arn) {
+            this.profileArn = profile.arn;
+            console.log('[KiroService] 自动获取 profileArn:', this.profileArn);
+            return this.profileArn;
+        }
+        return null;
+    }
+
+    getContentText(message) {
+        if (!message) return '';
+        if (typeof message === 'string') return message;
+        if (Array.isArray(message)) {
+            return message.filter(part => part.type === 'text' && part.text).map(part => part.text).join('');
+        }
+        if (typeof message.content === 'string') return message.content;
+        if (Array.isArray(message.content)) {
+            return message.content.filter(part => part.type === 'text' && part.text).map(part => part.text).join('');
+        }
+        return String(message.content || message);
+    }
+
+    /**
+     * 检查是否为 ValidationException
+     */
+    _isValidationException(error) {
+        const errorType = error.response?.headers?.['x-amzn-errortype'] || '';
+        return errorType.includes('ValidationException');
+    }
+
+    /**
+     * 清理工具 input_schema，移除 CodeWhisperer 不兼容的字段
+     * 参考 kiro2api 的 cleanAndValidateToolParameters
+     */
+    _cleanInputSchema(schema) {
+        if (!schema || typeof schema !== 'object') return { type: 'object', properties: {} };
+
+        // 深拷贝避免修改原始数据
+        const cleaned = JSON.parse(JSON.stringify(schema));
+
+        // 移除不支持的顶级字段
+        delete cleaned.additionalProperties;
+        delete cleaned.strict;
+        delete cleaned.$schema;
+        delete cleaned.$id;
+        delete cleaned.$ref;
+        delete cleaned.definitions;
+        delete cleaned.$defs;
+
+        // 确保有 type: "object"
+        if (!cleaned.type) {
+            cleaned.type = 'object';
+        }
+
+        // 确保有 properties 字段
+        if (cleaned.type === 'object' && !cleaned.properties) {
+            cleaned.properties = {};
+        }
+
+        // 处理超长参数名（CodeWhisperer 限制参数名长度）
+        if (cleaned.properties && typeof cleaned.properties === 'object') {
+            const newProps = {};
+            for (const [key, value] of Object.entries(cleaned.properties)) {
+                const cleanedKey = key.length > 64 ? (key.length > 80 ? key.substring(0, 20) + '_' + key.substring(key.length - 20) : key.substring(0, 30) + '_param') : key;
+                newProps[cleanedKey] = value;
+            }
+            cleaned.properties = newProps;
+        }
+
+        // 确保 required 是字符串数组
+        if (cleaned.required) {
+            if (Array.isArray(cleaned.required)) {
+                cleaned.required = cleaned.required.filter(r => typeof r === 'string' && r !== '');
+            } else {
+                delete cleaned.required;
+            }
+        }
+
+        return cleaned;
+    }
+
+    buildRequest(messages, model, options = {}) {
+        const conversationId = uuidv4();
+        const agentContinuationId = uuidv4();
+        const codewhispererModel = MODEL_MAPPING[model] || MODEL_MAPPING[KIRO_CONSTANTS.DEFAULT_MODEL_NAME] || model;
+
+        let systemPrompt = '';
+        if (options.system) {
+            if (typeof options.system === 'string') {
+                systemPrompt = options.system;
+            } else if (Array.isArray(options.system)) {
+                systemPrompt = options.system.map(item => typeof item === 'string' ? item : item.text).join('\n');
+            }
+        }
+
+        // 自动添加工具使用规范，减少 "Error writing file" 错误
+        if (KIRO_CONSTANTS.TOOL_USE_GUIDELINES) {
+            systemPrompt = (systemPrompt ? systemPrompt + '\n\n' : '') + KIRO_CONSTANTS.TOOL_USE_GUIDELINES;
+        }
+
+        // 合并相邻相同 role 的消息
+        const mergedMessages = [];
+        for (const msg of messages) {
+            if (mergedMessages.length === 0) {
+                mergedMessages.push({ ...msg });
+            } else {
+                const lastMsg = mergedMessages[mergedMessages.length - 1];
+                if (msg.role === lastMsg.role) {
+                    if (Array.isArray(lastMsg.content) && Array.isArray(msg.content)) {
+                        lastMsg.content.push(...msg.content);
+                    } else if (typeof lastMsg.content === 'string' && typeof msg.content === 'string') {
+                        lastMsg.content += '\n' + msg.content;
+                    } else {
+                        mergedMessages.push({ ...msg });
+                    }
+                } else {
+                    mergedMessages.push({ ...msg });
+                }
+            }
+        }
+
+        let toolsContext = {};
+        let hasWebSearch = false;
+        if (options.tools && Array.isArray(options.tools) && options.tools.length > 0) {
+            hasWebSearch = this.hasWebSearchTool(options.tools);
+
+            // 过滤不支持的工具：web_search/websearch（静默过滤，不发送到上游，与 kiro2api 一致）
+            // 同时过滤 Bash，限制最多 25 个
+            const filteredTools = options.tools
+                .filter(tool => tool.name !== 'Bash' && tool.name !== 'web_search' && tool.name !== 'websearch' && tool.name !== 'WebSearch')
+                .slice(0, 25);
+
+            if (filteredTools.length > 0) {
+                toolsContext = {
+                    tools: filteredTools.map(tool => {
+                        // 截断过长的描述（最多 10000 字符，与 kiro2api 一致）
+                        let desc = tool.description || '';
+                        if (desc.length > 10000) {
+                            desc = desc.substring(0, 10000);
+                        }
+
+                        return {
+                            toolSpecification: {
+                                name: tool.name,
+                                description: desc,
+                                inputSchema: { json: this._cleanInputSchema(tool.input_schema || {}) }
+                            }
+                        };
+                    })
+                };
+            }
+        }
+
+        // 标记是否使用 WebSearch
+        this._useWebSearch = hasWebSearch;
+
+        const history = [];
+        let startIndex = 0;
+
+        // system prompt 独立配对为 user+assistant("OK")，与 kiro2api 一致
+        if (systemPrompt) {
+            history.push({
+                userInputMessage: {
+                    content: systemPrompt.trim(),
+                    modelId: codewhispererModel,
+                    origin: KIRO_CONSTANTS.ORIGIN_AI_EDITOR,
+                }
+            });
+            history.push({
+                assistantResponseMessage: {
+                    content: 'OK'
+                }
+            });
+        }
+
+        // 决定历史消息的循环边界（与 kiro2api 一致）
+        // 如果最后一条消息是 assistant，应该将它加入历史
+        // 如果最后一条是 user，它作为 currentMessage，不加入历史
+        const lastMessage = mergedMessages[mergedMessages.length - 1];
+        const historyEndIndex = lastMessage?.role === 'assistant' ? mergedMessages.length : mergedMessages.length - 1;
+
+        // 严格 user→assistant 配对（与 kiro2api 一致）
+        let userBuffer = [];
+        for (let i = startIndex; i < historyEndIndex; i++) {
+            const message = mergedMessages[i];
+            if (message.role === 'user') {
+                userBuffer.push(message);
+            } else if (message.role === 'assistant') {
+                if (userBuffer.length > 0) {
+                    // 合并所有累积的 user 消息
+                    const mergedUserMsg = this._mergeUserMessages(userBuffer, codewhispererModel);
+                    history.push({ userInputMessage: mergedUserMsg });
+                    userBuffer = [];
+                    // 添加 assistant 消息
+                    history.push({ assistantResponseMessage: this._buildAssistantResponseMessage(message) });
+                }
+                // 孤立的 assistant（无配对 user）被忽略
+            }
+        }
+        // 处理结尾的孤立 user 消息
+        if (userBuffer.length > 0) {
+            const mergedUserMsg = this._mergeUserMessages(userBuffer, codewhispererModel);
+            history.push({ userInputMessage: mergedUserMsg });
+            history.push({ assistantResponseMessage: { content: 'OK' } });
+            userBuffer = [];
+        }
+
+        let currentMessage = lastMessage;
+        let currentContent = '';
+        let currentToolResults = [];
+        let currentImages = [];
+
+        if (currentMessage?.role === 'assistant') {
+            // 最后一条是 assistant 时，已在上面循环中加入 history
+            currentContent = 'Continue';
+        } else if (currentMessage) {
+            if (Array.isArray(currentMessage.content)) {
+                for (const part of currentMessage.content) {
+                    if (part.type === 'text') {
+                        currentContent += part.text;
+                    } else if (part.type === 'tool_result') {
+                        currentToolResults.push({
+                            content: [{ text: this.getContentText(part.content) }],
+                            status: part.is_error ? 'error' : 'success',
+                            toolUseId: part.tool_use_id
+                        });
+                    } else if (part.type === 'image') {
+                        currentImages.push({
+                            format: part.source.media_type.split('/')[1],
+                            source: { bytes: part.source.data }
+                        });
+                    }
+                }
+            } else {
+                currentContent = this.getContentText(currentMessage);
+            }
+
+            // 工具结果请求时 content 设为空字符串（与 kiro2api 一致）
+            if (currentToolResults.length > 0) {
+                currentContent = '';
+            } else if (!currentContent) {
+                currentContent = 'Continue';
+            }
+        } else {
+            currentContent = 'Continue';
+        }
+
+        const userInputMessage = {
+            content: currentContent,
+            modelId: codewhispererModel,
+            origin: KIRO_CONSTANTS.ORIGIN_AI_EDITOR
+        };
+
+        if (currentImages.length > 0) {
+            userInputMessage.images = currentImages;
+        }
+
+        const userInputMessageContext = {};
+        if (currentToolResults.length > 0) {
+            const uniqueToolResults = [];
+            const seenIds = new Set();
+            for (const tr of currentToolResults) {
+                if (!seenIds.has(tr.toolUseId)) {
+                    seenIds.add(tr.toolUseId);
+                    uniqueToolResults.push(tr);
+                }
+            }
+            userInputMessageContext.toolResults = uniqueToolResults;
+        }
+        if (toolsContext.tools) {
+            userInputMessageContext.tools = toolsContext.tools;
+        }
+
+        if (Object.keys(userInputMessageContext).length > 0) {
+            userInputMessage.userInputMessageContext = userInputMessageContext;
+        }
+
+        const request = {
+            conversationState: {
+                agentContinuationId,
+                agentTaskType: 'vibe',
+                chatTriggerType: KIRO_CONSTANTS.CHAT_TRIGGER_TYPE_MANUAL,
+                conversationId,
+                currentMessage: { userInputMessage }
+            }
+        };
+
+        if (history.length > 0) {
+            request.conversationState.history = history;
+        }
+
+        if (this.authMethod === KIRO_CONSTANTS.AUTH_METHOD_SOCIAL && this.profileArn) {
+            request.profileArn = this.profileArn;
+        }
+
+        return request;
+    }
+
+    /**
+     * 合并多条 user 消息为一条（与 kiro2api 的合并逻辑一致）
+     */
+    _mergeUserMessages(userMsgs, codewhispererModel) {
+        const userInputMessage = {
+            content: '',
+            modelId: codewhispererModel,
+            origin: KIRO_CONSTANTS.ORIGIN_AI_EDITOR
+        };
+
+        const contentParts = [];
+        const allImages = [];
+        const allToolResults = [];
+
+        for (const msg of userMsgs) {
+            if (Array.isArray(msg.content)) {
+                for (const part of msg.content) {
+                    if (part.type === 'text' && part.text) {
+                        contentParts.push(part.text);
+                    } else if (part.type === 'tool_result') {
+                        allToolResults.push({
+                            content: [{ text: this.getContentText(part.content) }],
+                            status: part.is_error ? 'error' : 'success',
+                            toolUseId: part.tool_use_id
+                        });
+                    } else if (part.type === 'image') {
+                        allImages.push({
+                            format: part.source.media_type.split('/')[1],
+                            source: { bytes: part.source.data }
+                        });
+                    }
+                }
+            } else {
+                const text = this.getContentText(msg);
+                if (text) contentParts.push(text);
+            }
+        }
+
+        userInputMessage.content = contentParts.join('\n');
+
+        if (allImages.length > 0) {
+            userInputMessage.images = allImages;
+        }
+
+        if (allToolResults.length > 0) {
+            // 工具结果请求时 content 设为空字符串（与 kiro2api 一致）
+            userInputMessage.content = '';
+            const uniqueToolResults = [];
+            const seenIds = new Set();
+            for (const tr of allToolResults) {
+                if (!seenIds.has(tr.toolUseId)) {
+                    seenIds.add(tr.toolUseId);
+                    uniqueToolResults.push(tr);
+                }
+            }
+            userInputMessage.userInputMessageContext = { toolResults: uniqueToolResults };
+        }
+
+        return userInputMessage;
+    }
+
+    _buildUserInputMessage(msg, codewhispererModel) {
+        return this._mergeUserMessages([msg], codewhispererModel);
+    }
+
+    _buildAssistantResponseMessage(msg) {
+        const assistantResponseMessage = { content: '' };
+        let toolUses = [];
+
+        if (Array.isArray(msg.content)) {
+            for (const part of msg.content) {
+                if (part.type === 'text') {
+                    assistantResponseMessage.content += part.text;
+                } else if (part.type === 'tool_use') {
+                    // 过滤 web_search 工具调用（与 kiro2api 一致）
+                    if (part.name === 'web_search' || part.name === 'websearch') {
+                        continue;
+                    }
+                    toolUses.push({
+                        input: part.input || {},
+                        name: part.name,
+                        toolUseId: part.id
+                    });
+                }
+            }
+        } else {
+            assistantResponseMessage.content = this.getContentText(msg);
+        }
+
+        if (toolUses.length > 0) {
+            assistantResponseMessage.toolUses = toolUses;
+        } else {
+            assistantResponseMessage.toolUses = null;
+        }
+
+        return assistantResponseMessage;
+    }
+
+    parseEventStreamBuffer(buffer) {
+        const events = [];
+        let remaining = buffer;
+        let searchStart = 0;
+
+        // 预定义搜索模式（按优先级排序）
+        const patterns = ['{"content":', '{"name":', '{"followupPrompt":', '{"input":', '{"stop":'];
+
+        while (searchStart < remaining.length) {
+            // 一次遍历找到最近的 JSON 起始位置
+            let jsonStart = -1;
+            for (const pattern of patterns) {
+                const pos = remaining.indexOf(pattern, searchStart);
+                if (pos >= 0 && (jsonStart < 0 || pos < jsonStart)) {
+                    jsonStart = pos;
+                }
+            }
+
+            if (jsonStart < 0) break;
+
+            let braceCount = 0;
+            let jsonEnd = -1;
+            let inString = false;
+            let escapeNext = false;
+
+            for (let i = jsonStart; i < remaining.length; i++) {
+                const char = remaining[i];
+                if (escapeNext) { escapeNext = false; continue; }
+                if (char === '\\') { escapeNext = true; continue; }
+                if (char === '"') { inString = !inString; continue; }
+                if (!inString) {
+                    if (char === '{') braceCount++;
+                    else if (char === '}') {
+                        braceCount--;
+                        if (braceCount === 0) { jsonEnd = i; break; }
+                    }
+                }
+            }
+
+            if (jsonEnd < 0) {
+                remaining = remaining.substring(jsonStart);
+                break;
+            }
+
+            const jsonStr = remaining.substring(jsonStart, jsonEnd + 1);
+            try {
+                const parsed = JSON.parse(jsonStr);
+                if (parsed.content !== undefined && !parsed.followupPrompt) {
+                    events.push({ type: 'content', data: parsed.content });
+                } else if (parsed.name && parsed.toolUseId) {
+                    events.push({
+                        type: 'toolUse',
+                        data: { name: parsed.name, toolUseId: parsed.toolUseId, input: parsed.input || '', stop: parsed.stop || false }
+                    });
+                } else if (parsed.input !== undefined && !parsed.name) {
+                    events.push({ type: 'toolUseInput', data: { input: parsed.input } });
+                } else if (parsed.stop !== undefined) {
+                    events.push({ type: 'toolUseStop', data: { stop: parsed.stop } });
+                }
+            } catch (e) { }
+
+            searchStart = jsonEnd + 1;
+            if (searchStart >= remaining.length) { remaining = ''; break; }
+        }
+
+        if (searchStart > 0 && remaining.length > 0) {
+            remaining = remaining.substring(searchStart);
+        }
+
+        return { events, remaining };
+    }
+
+    async *generateContentStream(model, requestBody) {
+        const messages = requestBody.messages;
+
+        const requestData = this.buildRequest(messages, model, {
+            system: requestBody.system,
+            tools: requestBody.tools
+        });
+
+        // 检查是否是 WebSearch 请求，如果是则使用 MCP 端点直接执行搜索
+        const useWebSearch = this._useWebSearch;
+        
+        if (useWebSearch) {
+            // 从消息中提取搜索查询
+            const lastMessage = messages[messages.length - 1];
+            let searchQuery = '';
+            
+            if (lastMessage) {
+                const content = this.getContentText(lastMessage);
+                // 使用预编译正则提取搜索查询
+                const match = content.match(REGEX_SEARCH_QUERY);
+                if (match) {
+                    searchQuery = match[1].trim();
+                } else {
+                    searchQuery = content.trim();
+                }
+            }
+
+            if (searchQuery) {
+                console.log('[KiroService] 使用 MCP 执行 web_search，查询:', searchQuery);
+                
+                // 使用 MCP 端点执行搜索
+                const searchResult = await this.callMcpWebSearch(searchQuery);
+                
+                if (searchResult.success) {
+                    // 格式化搜索结果
+                    const formattedResult = this.formatMcpSearchResult(searchResult.result);
+                    console.log('[KiroService] MCP 搜索成功，返回结果');
+                    
+                    // 返回搜索结果作为文本
+                    yield { type: 'content_block_delta', delta: { type: 'text_delta', text: formattedResult } };
+                    return;
+                } else {
+                    // MCP 搜索失败，返回明确的错误信息
+                    console.error('[KiroService] MCP 搜索失败:', searchResult.error);
+                    const errorMessage = `抱歉，当前环境中 web_search 工具不可用（${searchResult.error || '网络错误'}）。\n\n我将根据已有知识为您提供信息。`;
+                    yield { type: 'content_block_delta', delta: { type: 'text_delta', text: errorMessage } };
+                    return;
+                }
+            } else {
+                console.log('[KiroService] 无法提取搜索查询，回退到普通请求');
+            }
+        }
+        
+        // 普通请求，使用 CodeWhisperer 端点
+        const targetUrl = this.baseUrl;
+
+        const headers = {
+            ...this.axiosInstance.defaults.headers.common,
+            'Authorization': `Bearer ${this.accessToken}`,
+            'amz-sdk-invocation-id': uuidv4(),
+        };
+        
+        log.curl('POST', targetUrl, headers, requestData);
+
+        let stream = null;
+        let retryCount = 0;
+        const maxRetries = 3;
+        const baseDelay = 1000;
+
+        while (retryCount <= maxRetries) {
+            try {
+                const response = await this.axiosInstance.post(targetUrl, requestData, {
+                    headers,
+                    responseType: 'stream'
+                });
+
+                stream = response.data;
+                let buffer = '';
+                let lastContentEvent = null;
+                let currentToolCall = null;
+
+                for await (const chunk of stream) {
+                    buffer += chunk.toString();
+                    const { events, remaining } = this.parseEventStreamBuffer(buffer);
+                    buffer = remaining;
+
+                    for (const event of events) {
+                        if (event.type === 'content' && event.data) {
+                            if (lastContentEvent === event.data) continue;
+                            lastContentEvent = event.data;
+                            yield { type: 'content_block_delta', delta: { type: 'text_delta', text: event.data } };
+                        } else if (event.type === 'toolUse') {
+                            const tc = event.data;
+                            if (tc.name && tc.toolUseId) {
+                                if (currentToolCall && currentToolCall.toolUseId === tc.toolUseId) {
+                                    currentToolCall.input += tc.input || '';
+                                } else {
+                                    if (currentToolCall) {
+                                        yield { type: 'tool_use', toolUse: this._finalizeToolCall(currentToolCall) };
+                                    }
+                                    currentToolCall = { toolUseId: tc.toolUseId, name: tc.name, input: tc.input || '' };
+                                }
+                                if (tc.stop) {
+                                    yield { type: 'tool_use', toolUse: this._finalizeToolCall(currentToolCall) };
+                                    currentToolCall = null;
+                                }
+                            }
+                        } else if (event.type === 'toolUseInput') {
+                            if (currentToolCall) currentToolCall.input += event.data.input || '';
+                        } else if (event.type === 'toolUseStop') {
+                            if (currentToolCall && event.data.stop) {
+                                yield { type: 'tool_use', toolUse: this._finalizeToolCall(currentToolCall) };
+                                currentToolCall = null;
+                            }
+                        }
+                    }
+                }
+
+                if (currentToolCall) {
+                    yield { type: 'tool_use', toolUse: this._finalizeToolCall(currentToolCall) };
+                }
+                return;
+
+            } catch (error) {
+                if (stream && typeof stream.destroy === 'function') stream.destroy();
+
+                const status = error.response?.status;
+
+                // 400 ValidationException 处理
+                if (status === 400 && this._isValidationException(error)) {
+                    // 打印详细错误信息用于调试
+                    const errorHeaders = error.response?.headers;
+                    console.error('[KiroService] 400 ValidationException 详情:');
+                    console.error('  URL:', targetUrl);
+                    console.error('  Headers:', JSON.stringify(errorHeaders, null, 2));
+                    try {
+                        const errorBody = error.response?.data;
+                        if (typeof errorBody === 'string') {
+                            console.error('  Body:', errorBody.substring(0, 1000));
+                        } else if (errorBody && typeof errorBody === 'object') {
+                            if (typeof errorBody.pipe === 'function' || errorBody._readableState) {
+                                console.error('  Body: [Stream object - cannot serialize]');
+                            } else {
+                                console.error('  Body:', JSON.stringify(errorBody, null, 2));
+                            }
+                        }
+                    } catch (jsonErr) {
+                        console.error('  Body: [无法序列化]', jsonErr.message);
+                    }
+
+                    // 直接返回错误，提示用户重新打开对话
+                    const contextError = new Error('上下文超出限制，请重新打开对话');
+                    contextError.status = 400;
+                    contextError.isContextLimit = true;
+                    throw contextError;
+                }
+
+                // 检查是否是签名错误 (403 SignatureDoesNotMatch)，可以重试
+                const errorType = error.response?.headers?.['x-amzn-errortype'] || '';
+                const isSignatureError = status === 403 && errorType.includes('SignatureDoesNotMatch');
+
+                if ((status === 429 || (status >= 500 && status < 600) || isSignatureError) && retryCount < maxRetries) {
+                    const delay = baseDelay * Math.pow(2, retryCount);
+                    const reason = isSignatureError ? '签名错误' : status;
+                    console.log(`[KiroService] 收到 ${reason}，${delay}ms 后重试... (${retryCount + 1}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    retryCount++;
+                    continue;
+                }
+
+                let errorMessage = error.message;
+                if (error.response) {
+                    errorMessage = `Request failed with status code ${status}`;
+                    const errorTypeHeader = error.response.headers?.['x-amzn-errortype'];
+                    const requestId = error.response.headers?.['x-amzn-requestid'];
+                    if (errorTypeHeader) errorMessage += ` | ErrorType: ${errorTypeHeader}`;
+                    if (requestId) errorMessage += ` | RequestId: ${requestId}`;
+                }
+
+                const enhancedError = new Error(errorMessage);
+                enhancedError.status = status;
+                throw enhancedError;
+            } finally {
+                if (stream && typeof stream.destroy === 'function') stream.destroy();
+            }
+        }
+    }
+
+    async generateContent(model, requestBody) {
+        const messages = requestBody.messages;
+
+        const requestData = this.buildRequest(messages, model, {
+            system: requestBody.system,
+            tools: requestBody.tools
+        });
+
+        // 检查是否是 WebSearch 请求，如果是则使用 MCP 端点直接执行搜索
+        const useWebSearch = this._useWebSearch;
+        
+        if (useWebSearch) {
+            // 从消息中提取搜索查询
+            const lastMessage = messages[messages.length - 1];
+            let searchQuery = '';
+            
+            if (lastMessage) {
+                const content = this.getContentText(lastMessage);
+                const match = content.match(REGEX_SEARCH_QUERY);
+                if (match) {
+                    searchQuery = match[1].trim();
+                } else {
+                    searchQuery = content.trim();
+                }
+            }
+
+            if (searchQuery) {
+                console.log('[KiroService] 使用 MCP 执行 web_search (非流式)，查询:', searchQuery);
+                
+                const searchResult = await this.callMcpWebSearch(searchQuery);
+                
+                if (searchResult.success) {
+                    const formattedResult = this.formatMcpSearchResult(searchResult.result);
+                    console.log('[KiroService] MCP 搜索成功 (非流式)');
+                    return { content: formattedResult, toolCalls: [] };
+                } else {
+                    console.error('[KiroService] MCP 搜索失败 (非流式):', searchResult.error);
+                    const errorMessage = `抱歉，当前环境中 web_search 工具不可用（${searchResult.error || '网络错误'}）。\n\n我将根据已有知识为您提供信息。`;
+                    return { content: errorMessage, toolCalls: [] };
+                }
+            }
+        }
+        
+        // 普通请求，使用 CodeWhisperer 端点
+        const targetUrl = this.baseUrl;
+
+        const headers = {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'amz-sdk-invocation-id': uuidv4(),
+        };
+
+        let retryCount = 0;
+        const maxRetries = 3;
+        const baseDelay = 1000;
+
+        while (retryCount <= maxRetries) {
+            try {
+                const response = await this.axiosInstance.post(targetUrl, requestData, { headers });
+                const rawStr = Buffer.isBuffer(response.data) ? response.data.toString('utf8') : String(response.data);
+
+                let fullContent = '';
+                const toolCalls = [];
+                let currentToolCall = null;
+
+                const { events } = this.parseEventStreamBuffer(rawStr);
+                for (const event of events) {
+                    if (event.type === 'content') {
+                        fullContent += event.data;
+                    } else if (event.type === 'toolUse') {
+                        const tc = event.data;
+                        if (tc.name && tc.toolUseId) {
+                            if (currentToolCall && currentToolCall.toolUseId === tc.toolUseId) {
+                                currentToolCall.input += tc.input || '';
+                            } else {
+                                if (currentToolCall) toolCalls.push(this._finalizeToolCall(currentToolCall));
+                                currentToolCall = { toolUseId: tc.toolUseId, name: tc.name, input: tc.input || '' };
+                            }
+                            if (tc.stop) {
+                                toolCalls.push(this._finalizeToolCall(currentToolCall));
+                                currentToolCall = null;
+                            }
+                        }
+                    } else if (event.type === 'toolUseInput') {
+                        if (currentToolCall) currentToolCall.input += event.data.input || '';
+                    } else if (event.type === 'toolUseStop') {
+                        if (currentToolCall && event.data.stop) {
+                            toolCalls.push(this._finalizeToolCall(currentToolCall));
+                            currentToolCall = null;
+                        }
+                    }
+                }
+
+                if (currentToolCall) toolCalls.push(this._finalizeToolCall(currentToolCall));
+                return { content: fullContent, toolCalls };
+
+            } catch (error) {
+                const status = error.response?.status;
+
+                // 400 ValidationException 处理
+                if (status === 400 && this._isValidationException(error)) {
+                    // 打印详细错误信息用于调试
+                    const errorHeaders = error.response?.headers;
+                    console.error('[KiroService] 400 ValidationException 详情 (非流式):');
+                    console.error('  URL:', targetUrl);
+                    console.error('  Headers:', JSON.stringify(errorHeaders, null, 2));
+                    try {
+                        const errorBody = error.response?.data;
+                        if (typeof errorBody === 'string') {
+                            console.error('  Body:', errorBody.substring(0, 1000));
+                        } else if (errorBody && typeof errorBody === 'object') {
+                            if (typeof errorBody.pipe === 'function' || errorBody._readableState) {
+                                console.error('  Body: [Stream object - cannot serialize]');
+                            } else {
+                                const seen = new WeakSet();
+                                const safeStringify = (obj) => JSON.stringify(obj, (key, value) => {
+                                    if (typeof value === 'object' && value !== null) {
+                                        if (seen.has(value)) return '[Circular]';
+                                        seen.add(value);
+                                    }
+                                    return value;
+                                }, 2);
+                                console.error('  Body:', safeStringify(errorBody));
+                            }
+                        }
+                    } catch (jsonErr) {
+                        console.error('  Body: [无法序列化]', jsonErr.message);
+                    }
+
+                    // 直接返回错误，提示用户重新打开对话
+                    const contextError = new Error('上下文超出限制，请重新打开对话');
+                    contextError.status = 400;
+                    contextError.isContextLimit = true;
+                    throw contextError;
+                }
+
+                // 检查是否是签名错误 (403 SignatureDoesNotMatch)，可以重试
+                const errorType = error.response?.headers?.['x-amzn-errortype'] || '';
+                const isSignatureError = status === 403 && errorType.includes('SignatureDoesNotMatch');
+
+                if ((status === 429 || (status >= 500 && status < 600) || isSignatureError) && retryCount < maxRetries) {
+                    const delay = baseDelay * Math.pow(2, retryCount);
+                    const reason = isSignatureError ? '签名错误' : status;
+                    console.log(`[KiroService] 收到 ${reason}，${delay}ms 后重试... (${retryCount + 1}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    retryCount++;
+                    continue;
+                }
+
+                let errorMessage = error.message;
+                if (error.response) {
+                    errorMessage = `Request failed with status code ${status}`;
+                    const errorTypeHeader = error.response.headers?.['x-amzn-errortype'];
+                    const requestId = error.response.headers?.['x-amzn-requestid'];
+                    if (errorTypeHeader) errorMessage += ` | ErrorType: ${errorTypeHeader}`;
+                    if (requestId) errorMessage += ` | RequestId: ${requestId}`;
+                }
+
+                const enhancedError = new Error(errorMessage);
+                enhancedError.status = status;
+                throw enhancedError;
+            }
+        }
+    }
+
+    _finalizeToolCall(toolCall) {
+        let input = toolCall.input;
+        const inputSize = toolCall.input ? toolCall.input.length : 0;
+
+        try {
+            input = JSON.parse(toolCall.input);
+
+            // 对 Write/Edit 工具进行内容大小检查和警告
+            if (toolCall.name === 'Write' && input.content) {
+                const contentLength = input.content.length;
+                if (contentLength > 3000) {  // 降低到 3000 字符，与工具描述中的限制一致
+                    const message = `Write 内容过大 (${contentLength} 字符)，可能导致写入失败，建议分块写入`;
+                    log.warn(`[工具调用] ${message}`);
+                    // 异步写入数据库日志
+                    this._logToolCallToDb('WARN', toolCall, message, inputSize, input.file_path);
+                }
+            }
+            if (toolCall.name === 'Edit' && input.new_string) {
+                const newStringLength = input.new_string.length;
+                if (newStringLength > 2500) {  // 降低到 2500 字符，与工具描述中的限制一致
+                    const message = `Edit new_string 过大 (${newStringLength} 字符)，可能导致写入失败`;
+                    log.warn(`[工具调用] ${message}`);
+                    // 异步写入数据库日志
+                    this._logToolCallToDb('WARN', toolCall, message, inputSize, input.file_path);
+                }
+            }
+        } catch (e) {
+            // JSON 解析失败，尝试自动修复
+            const originalError = e.message;
+            let fixed = false;
+            let fixedInput = toolCall.input;
+
+            try {
+                // 尝试修复常见的 JSON 转义错误
+                fixedInput = this._tryFixJsonEscaping(fixedInput);
+                input = JSON.parse(fixedInput);
+                fixed = true;
+                log.info(`[工具调用] ${toolCall.name} JSON 自动修复成功`);
+            } catch (e2) {
+                // 修复失败，记录警告
+                if (toolCall.input && toolCall.input.length > 100) {
+                    const message = `${toolCall.name} 输入 JSON 解析失败: ${originalError}`;
+                    log.warn(`[工具调用] ${message}`);
+                    // 异步写入数据库日志
+                    this._logToolCallToDb('ERROR', toolCall, message, inputSize);
+                }
+            }
+        }
+        return { toolUseId: toolCall.toolUseId, name: toolCall.name, input };
+    }
+
+    /**
+     * 尝试修复常见的 JSON 转义错误
+     */
+    _tryFixJsonEscaping(jsonStr) {
+        if (!jsonStr || typeof jsonStr !== 'string') return jsonStr;
+
+        let fixed = jsonStr;
+
+        // 修复非法的转义序列（使用预编译正则）
+        fixed = fixed.replace(REGEX_ILLEGAL_ESCAPE, (match, char) => {
+            if (char === 'x') {
+                return '\\\\x';
+            }
+            return '\\\\' + char;
+        });
+
+        // 修复不完整的 \u 转义
+        fixed = fixed.replace(REGEX_INCOMPLETE_UNICODE, '\\\\u');
+
+        // 修复字符串中未转义的换行符
+        fixed = fixed.replace(REGEX_UNESCAPED_NEWLINE, '$1\\n');
+
+        return fixed;
+    }
+
+    /**
+     * 异步写入工具调用日志到数据库
+     */
+    async _logToolCallToDb(logLevel, toolCall, message, inputSize, inputPreview = null) {
+        try {
+            const store = await getToolCallLogStore();
+            await store.log({
+                credentialId: this.credential?.id || null,
+                credentialName: this.credential?.name || null,
+                toolName: toolCall.name,
+                toolUseId: toolCall.toolUseId,
+                inputSize: inputSize,
+                logLevel: logLevel,
+                message: message,
+                inputPreview: inputPreview ? inputPreview.substring(0, 255) : null
+            });
+        } catch (err) {
+            // 写入数据库失败不影响主流程
+            log.error(`[工具调用日志] 写入数据库失败: ${err.message}`);
+        }
+    }
+
+    listModels() {
+        return { models: KIRO_MODELS.map(id => ({ name: id })) };
+    }
+}
+
+export default KiroService;

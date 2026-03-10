@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(grep:*)",
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(docker ps:*)",
+      "Bash(lsof:*)",
+      "Bash(cat:*)",
+      "Bash(python3:*)"
+    ]
+  }
+}

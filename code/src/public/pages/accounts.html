@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账号管理 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar will be injected by JS -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">账号管理</h1>
+                            <p class="page-subtitle">管理您的 Kiro API 凭证</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-center">
+                    <div class="search-box">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="search-input" placeholder="搜索账号...">
+                        <span class="search-shortcut">⌘K</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-tabs">
+                        <button class="header-tab active" data-filter="all">
+                            全部
+                            <span class="tab-count" id="tab-count-all">0</span>
+                        </button>              <button class="header-tab" data-filter="google">
+                            Google
+                            <span class="tab-count" id="tab-count-google">0</span>
+                        </button>
+                        <button class="header-tab" data-filter="github">
+                            GitHub
+                            <span class="tab-count" id="tab-count-github">0</span>
+                        </button>
+                        <button class="header-tab" data-filter="idc">
+                            IdC
+                            <span class="tab-count" id="tab-count-idc">0</span>
+                        </button>
+                    </div>
+                    <button class="btn btn-primary" id="add-account-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加账号
+                    </button>
+                    <button class="btn btn-secondary" id="batch-import-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        批量导入
+                    </button>
+                    <button class="btn btn-secondary" id="import-idc-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="12" y1="8" x2="12" y2="16"/>
+                            <line x1="8" y1="12" x2="16" y2="12"/>
+                        </svg>
+                        导入 IdC
+                    </button>
+                    <a href="https://faka.sv7.cn/" target="_blank" class="btn btn-success" id="buy-account-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="21" r="1"/>
+                            <circle cx="20" cy="21" r="1"/>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                        </svg>
+                        账号购买
+                    </a>
+                </div>
+            </header>
+
+            <!-- Statistics Cards -->
+            <div class="stats-cards" id="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-total-accounts">0</div>
+                        <div class="stat-label">总账号数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-total-quota">0</div>
+                        <div class="stat-label">总额度</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-total-used">0</div>
+                        <div class="stat-label">总已用</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-total-remaining">0</div>
+                        <div class="stat-label">总剩余</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+                            <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-avg-usage">0%</div>
+                        <div class="stat-label">平均使用率</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area" id="accounts-page">
+                <div class="content-header">
+                    <div class="content-header-left">
+                        <div class="select-all-wrapper">
+                            <input type="checkbox" class="checkbox-custom" id="select-all">
+                            <label class="select-label" for="select-all">全选</label>
+                        </div>
+                        <span class="account-count">共 <strong id="displayed-count">0</strong> 个账号</span>
+                    </div>
+                    <div class="content-header-right">
+                        <button class="btn btn-warning btn-sm" id="ban-check-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            封禁检测
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="refresh-usage-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                             <line x1="12" y1="20" x2="12" y2="10"/>
+                                <line x1="18" y1="20" x2="18" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="16"/>
+                            </svg>
+                            批量刷新额度
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="refresh-all-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"/>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                            批量刷新Token
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="batch-delete-btn" style="display: none;">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            批量删除
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Accounts Table -->
+                <div class="table-container" id="accounts-table-container">
+                    <table class="data-table" id="accounts-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"><input type="checkbox" class="checkbox-custom" id="table-select-all"></th>
+                                <th>邮箱</th>
+                                <th>认证方式</th>
+                                <th>提供商</th>
+                                <th>区域</th>
+                                <th>额度使用</th>
+                                <th>过期时间</th>
+                                <th>状态</th>
+                                <th style="width: 160px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accounts-tbody">
+                            <!-- Rows will be rendered here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <h3 class="empty-title">暂无账号</h3>
+                    <p class="empty-description">您还没有添加任何账号，点击下方按钮开始添加您的第一个账号</p>
+                    <button class="btn btn-primary" id="empty-add-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加账号
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Account Modal -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">添加新账号</h2>
+                <button class="modal-close" id="modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="add-account-form">
+                    <div class="form-group">
+                        <label class="form-label">认证方式 <span class="required">*</span></label>
+                        <select class="form-select" id="auth-method" required>
+                            <option value="social">Social (Google/GitHub)</option>
+                            <option value="builder-id">AWS Builder ID</option>
+                            <option value="IdC">IAM Identity Center</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">邮箱 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="account-email" placeholder="user@example.com" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">区域</label>
+                            <select class="form-select" id="account-region">
+                                <option value="us-east-1">us-east-1</option>
+                                <option value="us-west-1">us-west-1</option>
+                                <option value="us-west-2">us-west-2</option>
+                                <option value="eu-west-1">eu-west-1</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">提供商</label>
+                            <select class="form-select" id="account-provider">
+                                <option value="Google">Google</option>
+                                <option value="GitHub">GitHub</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Refresh Token <span class="required">*</span></label>
+                        <textarea class="form-textarea" id="refresh-token" placeholder="粘贴您的 Refresh Token..." required></textarea>
+                        <p class="form-hint">从 OAuth 认证流程获取的刷新令牌</p>
+                    </div>
+                    <div class="form-group" id="client-credentials" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Client ID</label>
+                                <input type="text" class="form-input" id="client-id" placeholder="Client ID">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Client Secret</label>
+                                <input type="password" class="form-input" id="client-secret" placeholder="Client Secret">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel">取消</button>
+                <button class="btn btn-primary" id="modal-submit">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    添加账号
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Import Modal -->
+    <div class="modal-overlay" id="batch-import-modal">
+        <div class="modal" style="max-width: 640px;">
+            <div class="modal-header">
+                <h2 class="modal-title">批量导入账号</h2>
+                <button class="modal-close" id="batch-modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">账号类型</label>
+                    <select class="form-select" id="batch-provider">
+                        <option value="Google">Google</option>
+                        <option value="GitHub">GitHub</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">区域</label>
+                    <select class="form-select" id="batch-region">
+                        <option value="us-east-1">us-east-1</option>
+                        <option value="us-west-1">us-west-1</option>
+                        <option value="us-west-2">us-west-2</option>
+                        <option value="eu-west-1">eu-west-1</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">账号数据n class="required">*</span></label>
+                    <textarea class="form-textarea" id="batch-json" style="min-height: 200px; font-family: monospace; font-size: 12px;" placeholder='支持两种格式:
+
+1. 文本格式 (每行一个账号，空格分隔):
+user1@example.com aorAAAAA...
+user2@example.com aorAAAAA...
+
+2. JSON 格式:
+[{"email": "user1@example.com", "refreshToken": "aorAAAAA..."}]'></textarea>
+                    <p class="form-hint">支持文本格式 (email 空格 refreshToken) 或 JSON 数组格式</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="batch-modal-cancel">取消</button>
+                <button class="btn btn-primary" id="batch-modal-submit">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    导入
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import IdC Modal -->
+    <div class="modal-overlay" id="import-idc-modal">
+        <div class="modal" style="max-width: 750px;">
+            <div class="modal-header">
+                <h2 class="modal-title">导入 IdC/Builder ID 凭证</h2>
+                <button class="modal-close" id="idc-modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- 导入模式切换 -->
+                <div class="form-group">
+                    <label class="form-label">导入模式</label>
+                    <div class="import-mode-tabs">
+                        <button class="import-mode-tab active" data-mode="dual-file">双文件模式</button>
+                        <button class="import-mode-tab" data-mode="json-array">JSON 数组模式</button>
+                    </div>
+                </div>
+
+                <!-- 双文件模式 -->
+                <div id="dual-file-mode">
+                    <p class="form-hint" style="margin-bottom: 16px;">
+                        上传 Kiro IDE 导出的两个 JSON 文件（Client 文件 + Token 文件）
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label">凭证名称</label>
+                        <input type="text" class="form-input" id="idc-name" placeholder="可选，留空使用邮箱">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Client 文件 <span class="required">*</span></label>
+                            <div class="file-upload-area" id="client-file-area">
+                                <input type="file" id="client-file-input" accept=".json" style="display: none;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5;">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="12" y1="18" x2="12" y2="12"/>
+                                    <line x1="9" y1="15" x2="15" y2="15"/>
+                                </svg>
+                                <span class="file-upload-text">点击或拖拽上传</span>
+                                <span class="file-upload-hint">包含 clientId, clientSecret</span>
+                            </div>
+                            <div class="file-selected" id="client-file-selected" style="display: none;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                                <span id="client-file-name"></span>
+                                <button class="file-remove-btn" id="client-file-remove">&times;</button>
+                            </div>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Token 文件 <span class="required">*</span></label>
+                            <div class="file-upload-area" id="token-file-area">
+                                <input type="file" id="token-file-input" accept=".json" style="display: none;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5;">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="12" y1="18" x2="12" y2="12"/>
+                                    <line x1="9" y1="15" x2="15" y2="15"/>
+                                </svg>
+                                <span class="file-upload-text">点击或拖拽上传</span>
+                                <span class="file-upload-hint">包含 accessToken, refreshToken</span>
+                            </div>
+                            <div class="file-selected" id="token-file-selected" style="display: none;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                                <span id="token-file-name"></span>
+                                <button class="file-remove-btn" id="token-file-remove">&times;</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">或直接粘贴 JSON 内容</label>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <textarea class="form-textarea" id="idc-client-json" style="min-height: 100px; font-family: monospace; font-size: 11px;" placeholder='Client 文件内容:
+{
+  "clientId": "...",
+  "clientSecret": "..."
+}'></textarea>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <textarea class="form-textarea" id="idc-token-json" style="min-height: 100px; font-family: monospace; font-size: 11px;" placeholder='Token 文件内容:
+{
+  "accessToken": "...",
+  "refreshToken": "..."
+}'></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JSON 数组模式 -->
+                <div id="json-array-mode" style="display: none;">
+                    <p class="form-hint" style="margin-bottom: 16px;">
+                        粘贴完整的 JSON 数组，支持批量导入多个 IdC 凭证
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label">JSON 数组 <span class="required">*</span></label>
+                        <textarea class="form-textarea" id="idc-json-array" style="min-height: 280px; font-family: monospace; font-size: 11px;" placeholder='[
+  {
+    "email": "user@example.com",
+    "accessToken": "aoaAAAAA...",
+    "refreshToken": "aorAAAAA...",
+    "clientId": "xxx",
+    "clientSecret": "eyJ...",
+    "authMethod": "IdC",
+    "provider": "Enterprise",
+    "region": "us-east-1",
+    "expiresAt": "2026/02/07 02:10:20"
+  },
+  ...
+]'></textarea>
+                        <p class="form-hint">每个对象需包含: email, accessToken, refreshToken, clientId, clientSecret</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="idc-modal-cancel">取消</button>
+                <button class="btn btn-primary" id="idc-modal-submit">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    导入凭证
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="context-menu">
+        <div class="context-menu-item" data-action="activate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            设为活跃
+        </div>
+        <div class="context-menu-item" data-action="refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            刷新令牌
+        </div>
+        <div class="context-menu-item" data-action="test">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+            测试连接
+        </div>
+        <div class="context-menu-item" data-action="usage">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="20" x2="12" y2="10"/>
+                <line x1="18" y1="20" x2="18" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="16"/>
+            </svg>
+            查看用量
+        </div>
+        <div class="context-menu-item" data-action="ban-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            封禁检测
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            开始对话
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item danger" data-action="delete">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+            删除
+        </div>
+    </div>
+
+    <!-- Progress Modal -->
+    <div class="modal-overlay" id="progress-modal" style="display: none;">
+        <div class="modal" style="max-width: 520px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="progress-title">批量操作进行中</h2>
+                <button class="modal-close" id="progress-modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span id="progress-text" style="font-size: 13px; color: var(--text-secondary);">准备中...</span>
+                        <span id="progress-percent" style="font-size: 13px; font-weight: 600;">0%</span>
+                    </div>
+                    <div style="height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                        <div id="progress-bar" style="height: 100%; width: 0%; background: var(--accent-primary); border-radius: 4px; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+                <div id="progress-stats" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
+                    <div style="text-align: center; padding: 8px; background: var(--bg-tertiary); border-radius: 6px;">
+                        <div style="font-size: 18px; font-weight: 700; color: var(--accent-success);" id="progress-success">0</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">成功</div>
+                    </div>
+                    <div style="text-align: center; padding: 8px; background: var(--bg-tertiary); border-radius: 6px;">
+                        <div style="font-size: 18px; font-weight: 700; color: var(--accent-danger);" id="progress-fail">0</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">失败/封禁</div>
+                    </div>
+                    <div style="text-align: center; padding: 8px; background: var(--bg-tertiary); border-radius: 6px;">
+                        <div style="font-size: 18px; font-weight: 700; color: var(--text-secondary);" id="progress-remaining">0</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">剩余</div>
+                    </div>
+                </div>
+                <div id="progress-log" style="max-height: 200px; overflow-y: auto; font-size: 12px; font-family: monospace; background: var(--bg-tertiary); border-radius: 6px; padding: 8px; color: var(--text-secondary);">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="progress-modal-done" style="display: none;">完成</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/accounts.js"></script>
+</body>
+</html>

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>接入教程</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/docs.css">
+</head>
+<body>
+    <div class="public-page">
+        <script src="/js/public-header.js"></script>
+        <script>renderPublicHeader('docs');</script>
+
+        <main class="public-content">
+            <div class="docs-header">
+                <h1 class="docs-title">Claude API 接入教程</h1>
+                <p class="docs-subtitle">选择您的接入方式，按照教程快速开始使用 Claude 模型。</p>
+            </div>
+
+            <!-- 接入类型选择 -->
+            <div class="integration-types">
+                <div class="integration-card active" data-type="guide">
+                    <div class="integration-icon">📖</div>
+                    <div class="integration-name">使用指南</div>
+                    <div class="integration-desc">兑换/费用/配置一站式</div>
+                </div>
+                <div class="integration-card" data-type="api">
+                    <div class="integration-icon">🔌</div>
+                    <div class="integration-name">API 接入</div>
+                    <div class="integration-desc">直接调用 REST API</div>
+                </div>
+                <div class="integration-card" data-type="cli">
+                    <div class="integration-icon">💻</div>
+                    <div class="integration-name">原生命令行接入</div>
+                    <div class="integration-desc">Claude CLI 直接使用</div>
+                </div>
+            </div>
+
+            <!-- 使用指南内容 -->
+            <div class="integration-content active" id="content-guide">
+                <!-- 通道信息 -->
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">1</span>
+                        服务通道
+                    </h2>
+                    <div class="section-content">
+                        <p>我们提供两个 API 通道，任选其一使用：</p>
+                        <table class="model-table">
+                            <thead>
+                                <tr>
+                                    <th>通道</th>
+                                    <th>地址</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="model-name">通道1</td>
+                                    <td><code>http://43.228.76.217:13003</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">通道2</td>
+                                    <td><code>http://43.228.78.22:13003</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="info-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            <div class="info-box-content">
+                                密钥就是发您的密钥。用量查询、试用申请地址同上。配置教程上面也有。<br>
+                                <a href="http://43.228.76.217:13003/pages/usage-query.html" target="_blank" style="color: var(--accent-primary);">http://43.228.76.217:13003</a> 申请完可以直接在下方查询获取到的 Key。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 兑换码说明 -->
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">2</span>
+                        兑换码使用
+                    </h2>
+                    <div class="section-content">
+                        <p>通过兑换码获取或充值 API Key：</p>
+                        <ol>
+                            <li>进入 <a href="/pages/usage-query.html" style="color: var(--accent-primary);">用量查询页面</a>，右侧有两个兑换卡片</li>
+                            <li><strong>新建 API Key</strong>：输入兑换码 + 邮箱（可选），生成新的 API Key</li>
+                            <li><strong>充值已有 Key</strong>：输入兑换码 + 已有 API Key，叠加套餐额度</li>
+                            <li>填写邮箱后，兑换成功会自动发送 Key 到邮箱</li>
+                            <li>也可通过邮箱查询之前兑换的 API Key</li>
+                        </ol>
+                        <div class="info-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            <div class="info-box-content">
+                                进群找群主领取 10 刀 24 小时体验。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 费用说明 -->
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">3</span>
+                        费用说明
+                    </h2>
+                    <div class="section-content">
+                        <h3 style="color: var(--accent-primary); margin-bottom: 12px;">不限量套餐</h3>
+                        <p>不限制 Token，不限制调用次数，不限制模型。</p>
+                        <table class="model-table">
+                            <thead>
+                                <tr>
+                                    <th>套餐</th>
+                                    <th>价格</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="model-name">天卡</td>
+                                    <td>20 元</td>
+                                    <td>不限量，不限 Token，不限调用次数</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">周卡</td>
+                                    <td>90 元</td>
+                                    <td>不限量，不限 Token，不限调用次数</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">月卡</td>
+                                    <td>380 元</td>
+                                    <td>不限量，不限 Token，不限调用次数</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3 style="color: var(--accent-primary); margin: 20px 0 12px;">按刀计费</h3>
+                        <table class="model-table">
+                            <thead>
+                                <tr>
+                                    <th>套餐</th>
+                                    <th>价格</th>
+                                    <th>有效期</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="model-name">100 刀</td>
+                                    <td>5 元</td>
+                                    <td>7 天</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">200 刀</td>
+                                    <td>10 元</td>
+                                    <td>7 天</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">500 刀</td>
+                                    <td>20 元</td>
+                                    <td>10 天</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Claude Code 配置 -->
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">4</span>
+                        Claude Code 配置
+                    </h2>
+                    <div class="section-content">
+                        <p>配置 Claude Code 使用自定义 API 端点。</p>
+                        <p class="code-label">配置文件位置</p>
+                        <table class="model-table">
+                            <thead>
+                                <tr>
+                                    <th>系统</th>
+                                    <th>路径</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="model-name">Mac / Linux</td>
+                                    <td><code>~/.claude/settings.json</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">Windows</td>
+                                    <td><code>%USERPROFILE%\.claude\settings.json</code><br><small>即 C:\Users\&lt;用户名&gt;\.claude\settings.json</small></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <p class="code-label" style="margin-top: 16px;">配置内容</p>
+                        <p><code>ANTHROPIC_MODEL</code> 是默认模型，修改后需重启 Claude Code 客户端。</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                            <pre>{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "sk-您的key",
+    "ANTHROPIC_BASE_URL": "http://43.228.76.217:13003",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5-20251001",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-5-20251101",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-20250514",
+    "ANTHROPIC_MODEL": "claude-opus-4-5-20251101",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1,
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "102000"
+  },
+  "includeCoAuthoredBy": false
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 配置步骤 -->
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">5</span>
+                        配置步骤
+                    </h2>
+                    <div class="section-content">
+                        <div class="tab-container">
+                            <div class="tab-buttons">
+                                <button class="tab-btn active" data-tab="guide-mac">Mac / Linux</button>
+                                <button class="tab-btn" data-tab="guide-win">Windows</button>
+                            </div>
+                            <div class="tab-content active" id="tab-guide-mac">
+                                <ol>
+                                    <li>打开终端</li>
+                                    <li>创建配置目录（如不存在）：</li>
+                                </ol>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                                    <pre>mkdir -p ~/.claude</pre>
+                                </div>
+                                <ol start="3">
+                                    <li>编辑配置文件：</li>
+                                </ol>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                                    <pre>nano ~/.claude/settings.json</pre>
+                                </div>
+                                <ol start="4">
+                                    <li>粘贴上方配置内容，保存退出（Ctrl+X, Y, Enter）</li>
+                                    <li>重启 Claude Code</li>
+                                </ol>
+                            </div>
+                            <div class="tab-content" id="tab-guide-win">
+                                <ol>
+                                    <li>按 Win + R，输入 cmd 打开命令提示符</li>
+                                    <li>创建配置目录：</li>
+                                </ol>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                                    <pre>mkdir %USERPROFILE%\.claude</pre>
+                                </div>
+                                <ol start="3">
+                                    <li>用记事本创建配置文件：</li>
+                                </ol>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                                    <pre>notepad %USERPROFILE%\.claude\settings.json</pre>
+                                </div>
+                                <ol start="4">
+                                    <li>粘贴上方配置内容，保存文件</li>
+                                    <li>重启 Claude Code</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 验证配置 -->
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">6</span>
+                        验证与注意事项
+                    </h2>
+                    <div class="section-content">
+                        <p>运行以下命令验证配置是否生效：</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                            <pre>claude --version</pre>
+                        </div>
+                        <p>如果配置正确，Claude Code 将使用指定的 API 端点和模型。</p>
+                        <div class="warning-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                            <div class="warning-box-content">
+                                <strong>注意事项：</strong>
+                                <ol style="margin: 8px 0 0; padding-left: 18px;">
+                                    <li><strong>API 密钥安全</strong>：请妥善保管，不要泄露给他人</li>
+                                    <li><strong>JSON 格式</strong>：确保配置文件是有效的 JSON 格式，注意逗号和引号</li>
+                                    <li><strong>路径问题</strong>：Windows 用户注意使用反斜杠 <code>\</code> 或正斜杠 <code>/</code></li>
+                                    <li><strong>重启生效</strong>：修改配置后需要重启 Claude Code 才能生效</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Claude Code 安装 -->
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">7</span>
+                        Claude Code 安装
+                    </h2>
+                    <div class="section-content">
+                        <p>如果还没有安装 Claude Code，可以通过 npm 全局安装：</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                            <pre>npm install -g @anthropic-ai/claude-code</pre>
+                        </div>
+                        <div class="info-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            <div class="info-box-content">
+                                安装前请确保已安装 Node.js 18 或更高版本。可通过 <code>node -v</code> 检查版本。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API 接入内容 -->
+            <div class="integration-content" id="content-api">
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">1</span>
+                        获取 API 密钥
+                    </h2>
+                    <div class="section-content">
+                        <p>在开始使用之前，您需要获取一个 API 密钥。请联系管理员获取您的专属 API 密钥。</p>
+                        <p>API 密钥格式为：<code>sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></p>
+                        <div class="warning-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                            <div class="warning-box-content">
+                                请妥善保管您的 API 密钥，不要将其泄露给他人或提交到公开代码仓库中。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">2</span>
+                        API 端点
+                    </h2>
+                    <div class="section-content">
+                        <p>我们提供两种 API 格式，您可以根据需要选择：</p>
+                        <p class="code-label">Claude API 格式</p>
+                        <div class="endpoint-box">
+                            <span class="endpoint-method">POST</span>
+                            <span class="endpoint-url">{BASE_URL}/v1/messages</span>
+                        </div>
+                        <p class="code-label">OpenAI API 格式</p>
+                        <div class="endpoint-box">
+                            <span class="endpoint-method">POST</span>
+                            <span class="endpoint-url">{BASE_URL}/v1/chat/completions</span>
+                        </div>
+                        <div class="info-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            <div class="info-box-content">
+                                将 <code>{BASE_URL}</code> 替换为实际的服务地址，例如 <code>http://localhost:3000</code> 或您的部署域名。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">3</span>
+                        支持的模型
+                    </h2>
+                    <div class="section-content">
+                        <p>以下是当前支持的 Claude 模型列表：</p>
+                        <table class="model-table">
+                            <thead>
+                                <tr>
+                                    <th>模型名称</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="model-name">claude-sonnet-4-20250514</td>
+                                    <td>Claude Sonnet 4 - 平衡性能与速度</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">claude-opus-4-5-20251101</td>
+                                    <td>Claude Opus 4.5 - 最强大的模型</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">claude-3-5-sonnet-20241022</td>
+                                    <td>Claude 3.5 Sonnet</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">claude-3-5-haiku-20241022</td>
+                                  <td>Claude 3.5 Haiku - 快速响应</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- 原生命令行接入内容 -->
+            <div class="integration-content" id="content-cli">
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">1</span>
+                        安装 Claude Code
+                    </h2>
+                    <div class="section-content">
+                        <p>Claude Code 是 Anthropic 官方的命令行工具，可以通过 npm 全局安装：</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                            <pre>npm install -g @anthropic-ai/claude-code</pre>
+                        </div>
+                        <div class="info-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            <div class="info-box-content">
+                                安装前请确保已安装 Node.js 18 或更高版本。可通过 <code>node -v</code> 检查版本。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">2</span>
+                        配置环境变量
+                    </h2>
+                    <div class="section-content">
+                        <p>设置 API 密钥和服务端点，使 Claude Code 连接到本服务：</p>
+                        <div class="tab-container">
+                            <div class="tab-buttons">
+                                <button class="tab-btn active" data-tab="cli-mac">macOS / Linux</button>
+                                <button class="tab-btn" data-tab="cli-win">Windows</button>
+                            </div>
+                            <div class="tab-content active" id="tab-cli-mac">
+                                <p class="code-label">添加到 ~/.bashrc 或 ~/.zshrc</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                                    <pre>export ANTHROPIC_API_KEY="sk-your-api-key"
+export ANTHROPIC_BASE_URL="{BASE_URL}"</pre>
+                                </div>
+                                <p>保存后执行 <code>source ~/.bashrc</code> 或 <code>source ~/.zshrc</code> 使配置生效。</p>
+                            </div>
+                            <div class="tab-content" id="tab-cli-win">
+                                <p class="code-label">PowerShell - 添加到 $PROFILE</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                                    <pre>$env:ANTHROPIC_API_KEY = "sk-your-api-key"
+$env:ANTHROPIC_BASE_URL = "{BASE_URL}"</pre>
+                                </div>
+                                <p>或者通过系统环境变量设置（永久生效）：</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                                    <pre>[System.Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "sk-your-api-key", "User")
+[System.Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "{BASE_URL}", "User")</pre>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="warning-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                            <div class="warning-box-content">
+                                将 <code>{BASE_URL}</code> 替换为实际的服务地址，将 <code>sk-your-api-key</code> 替换为您的 API 密钥。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">3</span>
+                        启动您的第一个会话
+                    </h2>
+                    <div class="section-content">
+                        <p>在任何项目目录中打开终端并启动 Claude Code：</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                            <pre>cd /path/to/your/project
+claude</pre>
+                        </div>
+                        <p>您将看到 Claude Code 欢迎屏幕，其中包含您的会话信息、最近的对话和最新更新。</p>
+                        <div class="info-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            <div class="info-box-content">
+                                输入 <code>/help</code> 查看可用命令，或输入 <code>/resume</code> 继续之前的对话。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">4</span>
+                        基本使用
+                    </h2>
+                    <div class="section-content">
+                        <p>Claude Code 支持多种使用方式：</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">复制</button>
+                            <pre># 启动交互式会话
+claude
+
+# 直接发送消息
+claude "你好，请介绍一下自己"
+
+# 使用管道输入
+cat file.txt | claude "请分析这个文件"
+
+# 继续上一次对话
+claude --resume</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="docs-section">
+                    <h2 class="section-title">
+                        <span class="step-number">5</span>
+                        常用命令
+                    </h2>
+                    <div class="section-content">
+                        <table class="model-table">
+                            <thead>
+                                <tr>
+                                    <th>命令</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="model-name">claude</td>
+                                    <td>启动交互式会话</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">claude "message"</td>
+                                    <td>发送单条消息并获取回复</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">/help</td>
+                                    <td>查看所有可用命令</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">/resume</td>
+                                    <td>继续之前的对话</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">/clear</td>
+                                    <td>清除当前会话</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">/login</td>
+                                    <td>重新登录或切换账户</td>
+                                </tr>
+                                <tr>
+                                    <td class="model-name">claude --version</td>
+                                    <td>查看版本信息</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/js/docs.js"></script>
+</body>
+</html>

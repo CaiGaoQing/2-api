@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #F4F3EE;
+            --bg-secondary: #ECEAE4;
+            --bg-tertiary: #E6E4DD;
+            --bg-card: #FFFFFF;
+            --border-color: #D9D6CE;
+            --border-light: #C8C4BB;
+            --text-primary: #1A1815;
+            --text-secondary: #5C5850;
+            --text-muted: #948F85;
+            --accent-primary: #C15F3C;
+            --accent-primary-hover: #D4714E;
+            --accent-primary-glow: rgba(193, 95, 60, 0.2);
+            --accent-purple: #D4714E;
+            --accent-danger: #dc2626;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-purple) 100%);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 24px;
+            box-shadow: 0 0 30px var(--accent-primary-glow);
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+          webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+   box-shadow: 0 0 0 3px var(--accent-primary-glow);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+    r: white;
+            box-shadow: 0 2px 8px var(--accent-primary-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px var(--accent-primary-glow);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--accent-danger);
+            padding: 12px;
+           rder-radius: var(--radius-md);
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .setup-hint {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 20px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <div class="logo-icon" id="logo-icon">K</div>
+                <div class="logo-text" id="logo-text">KIRO</div>
+            </div>
+
+            <h1 class="login-title" id="page-title">登录</h1>
+            <p class="login-subtitle" id="page-subtitle">登录以管理您的账号和密钥</p>
+
+            <div class="error-message" id="error-message"></div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" class="form-input" id="username" placeholder="请输入用户名" required>
+                </div>
+                <div class="form-group">
+        <label class="form-label">密码</label>
+                    <input type="password" class="form-input" id="password" placeholder="请输入密码" required>
+                </div>
+                <div class="form-group" id="confirm-group" style="display: none;">
+                    <label class="form-label">确认密码</label>
+                    <input type="password" class="form-input" id="confirm-password" placeholder="请再次输入密码">
+                </div>
+                <button type="submit" class="btn btn-primary" id="submit-btn">登录</button>
+            </form>
+
+            <div class="setup-hint" id="setup-hint"le="display: none;">
+                首次使用，请创建管理员账户
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isSetupMode = false;
+
+        // 立即从缓存加载站点设置（避免闪烁）
+        (function() {
+            const cached = localStorage.getItem('siteSettings');
+            if (cached) {
+                try {
+                    const settings = JSON.parse(cached);
+                    document.getElementById('logo-icon').textContent = settings.siteLogo || 'K';
+                    document.getElementById('logo-text').textContent = (settings.siteName || 'Kiro').toUpperCase();
+                    document.title = `${settings.siteName || 'Kiro'} - 登录`;
+                } catch (e) {}
+            }
+        })();
+
+        // 加载站点设置（从服务器获取最新）
+        async function loadSiteSettings() {
+            try {
+                const res = await fetch('/api/site-settings');
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const settings = data.data;
+                    // 缓存到 localStorage
+                    localStorage.setItem('siteSettings', JSON.stringify(settings));
+                    document.getElementById('logo-icon').textContent = settings.siteLogo || 'K';
+                    document.getElementById('logo-text').textContent = (settings.siteName || 'Kiro').toUpperCase();
+                    document.title = `${settings.siteName || 'Kiro'} - 登录`;
+                }
+            } catch (e) {
+                console.error('Load site settings error:', e);
+            }
+        }
+
+        // 检查登录状态和系统状态
+        async function checkStatus() {
+            // 检查是否已登录
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                try {
+                    const res = await fetch('/api/auth/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        window.location.href = '/pages/accounts.html';
+                        return;
+                    }
+                    localStorage.removeItem('authToken');
+                } catch (e) {}
+            }
+
+            // 检查是否需要初始化
+            try {
+                const res = await fetch('/api/auth/status');
+                const data = await res.json();
+                if (data.success && data.data.needsSetup) {
+                    isSetupMode = true;
+                    document.getElementById('page-title').textContent = '初始化';
+                    document.getElementById('page-subtitle').textContent = '创建管理员账户以开始使用';
+                    document.getElementById('confirm-group').style.display = 'block';
+                    document.getElementById('submit-btn').textContent = '创建账户';
+                    document.getElementById('setup-hint').style.display = 'block';
+                }
+            } catch (e) {
+                showError('无法连接到服务器');
+            }
+        }
+
+        function showError(message) {
+            const el = document.getElementById('error-message');
+            el.textContent = message;
+            el.classList.add('show');
+        }
+
+        function hideError() {
+            document.getElementById('error-message').classList.remove('show');
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (!username || !password) {
+                showError('请填写用户名和密码');
+                return;
+            }
+
+            if (isSetupMode) {
+                if (password !== confirmPassword) {
+                    showError('两次输入的密码不一致');
+                    return;
+                }
+                if (password.length < 6) {
+                    showError('密码至少需要6位');
+                    return;
+                }
+            }
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.textContent = isSetupMode ? '创建中...' : '登录中...';
+
+            try {
+                const endpoint = isSetupMode ? '/api/auth/setup' : '/api/auth/login';
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('authToken', data.data.token);
+                    localStorage.setItem('username', data.data.username);
+                    localStorage.setItem('isAdmin', data.data.isAdmin);
+                    window.location.href = '/pages/accounts.html';
+                } else {
+                    showError(data.error || '操作失败');
+                }
+            } catch (error) {
+                showError('网络错误，请重试');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = isSetupMode ? '创建账户' : '登录';
+            }
+        });
+
+        checkStatus();
+        loadSiteSettings();
+    </script>
+</body>
+</html>

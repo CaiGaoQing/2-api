@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>满血号池 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">满血号池</h1>
+                            <p class="page-subtitle">管理云服务商 API 凭证</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-center">
+                    <div class="search-box">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="search-input" placeholder="搜索凭证...">
+                        <span class="search-shortcut">⌘K</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-tabs">
+                        <button class="header-tab active" data-filter="all">
+                            全部
+                            <span class="tab-count" id="tab-count-all">0</span>
+                        </button>
+                        <button class="header-tab" data-filter="digitalocean">
+                            数字海洋
+                            <span class="tab-count" id="tab-count-digitalocean">0</span>
+                        </button>
+                        <button class="header-tab" data-filter="aws">
+                            AWS
+                            <span class="tab-count" id="tab-count-aws">0</span>
+                        </button>
+                        <button class="header-tab" data-filter="gcp">
+                            GCP
+                            <span class="tab-count" id="tab-count-gcp">0</span>
+                        </button>
+                        <button class="header-tab" data-filter="azure">
+                            Azure
+                            <span class="tab-count" id="tab-count-azure">0</span>
+                        </button>
+                        <button class="header-tab" data-filter="other">
+                            其他
+                            <span class="tab-count" id="tab-count-other">0</span>
+                        </button>
+                    </div>
+                    <button class="btn btn-primary" id="add-account-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加凭证
+                    </button>
+                    <button class="btn btn-secondary" id="batch-import-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        批量导入
+                    </button>
+                    <button class="btn btn-secondary" id="model-mapping-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                        模型映射
+                    </button>
+                </div>
+            </header>
+
+            <div class="stats-cards" id="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">总凭证数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-active">0</div>
+                        <div class="stat-label">活跃凭证</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-inactive">0</div>
+                        <div class="stat-label">已禁用</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(0, 105, 255, 0.1); color: #0069ff;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-digitalocean">0</div>
+                        <div class="stat-label">数字海洋</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(255, 153, 0, 0.1); color: #ff9900;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-aws">0</div>
+                        <div class="stat-label">AWS</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="content-header">
+                    <div class="content-header-left">
+                        <div class="select-all-wrapper">
+                            <input type="checkbox" class="checkbox-custom" id="select-all">
+                            <label class="select-label" for="select-all">全选</label>
+                        </div>
+                        <span class="account-count">共 <strong id="displayed-count">0</strong> 个凭证</span>
+                    </div>
+                    <div class="content-header-right">
+                        <button class="btn btn-secondary btn-sm" id="refresh-all-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                            批量测试
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="batch-delete-btn" style="display: none;">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            批量删除
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table" id="accounts-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"><input type="checkbox" class="checkbox-custom" id="table-select-all"></th>
+                                <th>名称</th>
+                                <th>类型</th>
+                                <th>凭证信息</th>
+                                <th>区域</th>
+                                <th>创建时间</th>
+                                <th>状态</th>
+                                <th style="width: 160px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accounts-tbody"></tbody>
+                    </table>
+                </div>
+
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <h3 class="empty-title">暂无凭证</h3>
+                    <p class="empty-description">您还没有添加任何云服务凭证，点击下方按钮开始添加您的第一个凭证</p>
+                    <button class="btn btn-primary" id="empty-add-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加凭证
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Modal -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal" style="max-width: 560px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">添加凭证</h2>
+                <button class="modal-close" id="modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="add-form">
+                    <div class="form-group">
+                        <label class="form-label">凭证类型 <span class="required">*</span></label>
+                        <select class="form-select" id="credential-type" required>
+                            <option value="digitalocean">数字海洋 (DigitalOcean)</option>
+                            <option value="aws">AWS</option>
+                            <option value="gcp">GCP (Google Cloud)</option>
+                            <option value="azure">Azure</option>
+                            <option value="other">其他 (URL + Key)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">名称 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="credential-name" placeholder="凭证名称" required>
+                    </div>
+
+                    <!-- DigitalOcean -->
+                    <div id="fields-digitalocean" class="credential-fields">
+                        <div class="form-group">
+                            <label class="form-label">API Token <span class="required">*</span></label>
+                            <input type="password" class="form-input" id="do-token" placeholder="dop_v1_xxx...">
+                        </div>
+                    </div>
+
+                    <!-- AWS -->
+                    <div id="fields-aws" class="credential-fields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Access Key ID <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="aws-access-key" placeholder="AKIAIOSFODNN7EXAMPLE">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Secret Access Key <span class="required">*</span></label>
+                                <input type="password" class="form-input" id="aws-secret-key" placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Region</label>
+                            <select class="form-select" id="aws-region">
+                                <option value="us-east-1">us-east-1</option>
+                                <option value="us-west-2">us-west-2</option>
+                                <option value="eu-west-1">eu-west-1</option>
+                                <option value="ap-northeast-1">ap-northeast-1</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- GCP -->
+                    <div id="fields-gcp" class="credential-fields" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Service Account JSON <span class="required">*</span></label>
+                            <textarea class="form-textarea" id="gcp-json" placeholder='{"type": "service_account", ...}' style="min-height: 120px; font-family: monospace; font-size: 12px;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Azure -->
+                    <div id="fields-azure" class="credential-fields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Tenant ID <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="azure-tenant" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Client ID <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="azure-client" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Client Secret <span class="required">*</span></label>
+                            <input type="password" class="form-input" id="azure-secret" placeholder="Client Secret">
+                        </div>
+                    </div>
+
+                    <!-- Other -->
+                    <div id="fields-other" class="credential-fields" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">API URL <span class="required">*</span></label>
+                            <input type="url" class="form-input" id="other-url" placeholder="https://api.example.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API Key <span class="required">*</span></label>
+                            <input type="password" class="form-input" id="other-key" placeholder="API Key">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <textarea class="form-textarea" id="credential-remark" placeholder="可选备注信息..." style="min-height: 60px;"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel">取消</button>
+                <button class="btn btn-primary" id="modal-submit">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Import Modal -->
+    <div class="modal-overlay" id="batch-import-modal">
+        <div class="modal" style="max-width: 640px;">
+            <div class="modal-header">
+                <h2 class="modal-title">批量导入凭证</h2>
+                <button class="modal-close" id="batch-modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">凭证类型</label>
+                    <select class="form-select" id="batch-type">
+                        <option value="digitalocean">数字海洋 (DigitalOcean)</option>
+                        <option value="aws">AWS</option>
+                        <option value="gcp">GCP</option>
+                        <option value="azure">Azure</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">凭证数据 <span class="required">*</span></label>
+                    <textarea class="form-textarea" id="batch-json" style="min-height: 200px; font-family: monospace; font-size: 12px;" placeholder="支持两种格式:
+
+1. 文本格式 (每行一个，空格分隔):
+名称1 token1
+名称2 token2
+
+2. JSON 格式:
+[{&quot;name&quot;: &quot;凭证1&quot;, &quot;token&quot;: &quot;xxx...&quot;}]"></textarea>
+                    <p class="form-hint">支持文本格式或 JSON 数组格式</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="batch-modal-cancel">取消</button>
+                <button class="btn btn-primary" id="batch-modal-submit">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    导入
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="context-menu" id="context-menu">
+        <div class="context-menu-item" data-action="edit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            编辑
+        </div>
+        <div class="context-menu-item" data-action="test">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+            测试连接
+        </div>
+        <div class="context-menu-item" data-action="models">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+            </svg>
+            查看模型
+        </div>
+        <div class="context-menu-item" data-action="toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            启用/禁用
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item danger" data-action="delete">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+            删除
+        </div>
+    </div>
+
+    <!-- Models Modal -->
+    <div class="modal-overlay" id="models-modal">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 class="modal-title">可用模型列表</h2>
+                <button class="modal-close" id="models-modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="models-search">
+                    <input type="text" class="form-input" id="models-search-input" placeholder="搜索模型...">
+                </div>
+                <div class="models-list" id="models-list">
+                    <p class="empty-text">暂无模型数据，请先测试凭证连接</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <span class="models-count" id="models-count">共 0 个模型</span>
+                <button class="btn btn-secondary" id="models-modal-cancel">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Mapping Modal -->
+    <div class="modal-overlay" id="mapping-modal">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 class="modal-title">模型映射配置</h2>
+                <button class="modal-close" id="mapping-modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="form-hint" style="margin-bottom: 16px;">配置模型名称映射，例如将 <code>claude-opus-4.5</code> 映射到实际的模型 ID</p>
+                <div class="mapping-form">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">请求模型名称</label>
+                            <input type="text" class="form-input" id="mapping-source" placeholder="如: claude-opus-4.5">
+                   </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">目标模型 ID</label>
+                            <select class="form-select" id="mapping-target">
+                                <option value="">选择目标模型...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 0.5;">
+                            <label class="form-label">优先级</label>
+                            <input type="number" class="form-input" id="mapping-priority" value="0" min="0">
+                        </div>
+                        <div class="form-group" style="flex: 0; align-self: flex-end;">
+                            <button class="btn btn-primary" id="add-mapping-btn">添加</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mappings-list" id="mappings-list">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>请求模型</th>
+                                <th>目标模型</th>
+                                <th>提供商</th>
+                                <th>优先级</th>
+                                <th>状态</th>
+                                <th style="width: 100px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mappings-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="mapping-modal-cancel">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/full-accounts.js"></script>
+</body>
+</html>

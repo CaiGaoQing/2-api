@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warp 账号管理 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .warp-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+        .warp-icon {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+        .warp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            padding: 16px 0;
+        }
+        .warp-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+        .warp-card:hover {
+            border-color: #6366f1;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        }
+        .warp-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+        .warp-card-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .warp-card-info > div {
+            min-width: 0;
+            overflow: hidden;
+        }
+        .warp-card-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .warp-card-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .warp-card-email {
+            font-size: 12px;
+            color: var(--text-secondary);
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .warp-card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .warp-card-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+        .warp-card-label {
+            color: var(--text-secondary);
+        }
+        .warp-card-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        .warp-card-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+        .warp-card-actions .btn {
+            flex: 1;
+            padding: 8px 10px;
+            font-size: 12px;
+            min-width: 40px;
+        }
+        .warp-card-actions .btn .btn-icon {
+            margin: 0;
+        }
+        .quota-text {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .quota-text.success {
+            color: #22c55e;
+        }
+        .quota-text.warning {
+            color: #f59e0b;
+        }
+        .quota-text.danger {
+            color: #ef4444;
+        }
+        .quota-bar-container {
+            width: 100%;
+            margin-top: 8px;
+        }
+        .quota-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+        .quota-bar-label {
+            color: var(--text-secondary);
+        }
+        .quota-bar-value {
+            font-weight: 500;
+        }
+        .quota-bar {
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .quota-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .quota-bar-fill.success {
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+        }
+        .quota-bar-fill.warning {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+        .quota-bar-fill.danger {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .status-badge.active {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+        .status-badge.inactive {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        .status-badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal {
+            background: var(--card-bg);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow: auto;
+            transform: scale(0.9);
+            transition: transform 0.2s ease;
+        }
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 4px;
+        }
+        .modal-body {
+            padding: 20px;
+        }
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            z-index: 2000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast.success {
+            background: #22c55e;
+        }
+        .toast.error {
+            background: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon warp-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">Warp 账号管理</h1>
+                            <p class="page-subtitle">管理您的 Warp API 凭证 (Claude 4.1 Opus)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-center">
+                    <div class="search-box">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="search-input" placeholder="搜索账号名称、邮箱...">
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-secondary" id="refresh-all-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                        刷新全部Token
+                    </button>
+                    <button class="btn btn-secondary" id="refresh-all-quota-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                        刷新全部用量
+                    </button>
+                    <button class="btn btn-secondary" id="batch-import-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        批量导入
+                    </button>
+                    <button class="btn btn-primary" id="add-account-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加账号
+                    </button>
+                </div>
+            </header>
+
+            <!-- Statistics Cards -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-icon warp-gradient">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-total">-</div>
+                        <div class="stat-label">总账号</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-healthy">-</div>
+                        <div class="stat-label">健康账号</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-errors">-</div>
+                        <div class="stat-label">异常账号</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-usage">-</div>
+                        <div class="stat-label">总使用次数</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Toolbar -->
+                <div class="content-toolbar">
+                    <div class="toolbar-left">
+                        <span class="account-count">共 <strong id="displayed-count">0</strong> 个账号</span>
+                    </div>
+                    <div class="toolbar-right">
+                        <button class="btn btn-secondary btn-sm" id="health-check-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                            健康检查
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cards Grid -->
+                <div class="warp-grid" id="cards-grid"></div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <div class="empty-illustration">
+                        <svg viewBox="0 0 120 120" fill="none">
+                            <circle cx="60" cy="60" r="50" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+                            <circle cx="60" cy="60" r="35" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+                            <circle cx="60" cy="60" r="20" stroke="currentColor" stroke-width="2" opacity="0.4"/>
+                            <path d="M60 40v40M40 60h40" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="empty-title">暂无 Warp 账号</h3>
+                    <p class="empty-description">添加您的第一个 Warp 账号，开始使用 Claude 4.1 Opus API</p>
+                    <button class="btn btn-primary btn-lg" id="empty-add-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加账号
+                    </button>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loading-state" id="loading-state">
+                    <div class="loading-spinner large"></div>
+                    <p class="loading-text">加载中...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Account Modal -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">添加 Warp 账号</h2>
+                <button class="modal-close" onclick="closeModal('add-modal')">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">名称 (可选)</label>
+                    <input type="text" class="form-input" id="add-name" placeholder="自动使用邮箱作为名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Refresh Token *</label>
+                    <textarea class="form-textarea" id="add-refresh-token" placeholder="输入 Warp 的 refresh_token"></textarea>
+                    <p class="form-hint">从 Warp 客户端或数据库获取的 refresh_token</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-modal')">取消</button>
+                <button class="btn btn-primary" id="add-submit-btn">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Import Modal -->
+    <div class="modal-overlay" id="batch-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">批量导入 Warp 账号</h2>
+                <button class="modal-close" onclick="closeModal('batch-modal')">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">账号数据</label>
+                    <textarea class="form-textarea" id="batch-data" style="min-height: 200px;" placeholder='支持两种格式:
+
+格式1 - 文本格式（每行一个token，可带名称）:
+第1张
+AMf-vBzr...
+第2张
+AMf-vBxw...
+
+格式2 - JSON格式:
+[{"refreshToken": "AMf-vBzr...", "name": "账号1"}]'></textarea>
+                    <p class="form-hint">支持文本格式（第N张 + token）或 JSON 格式</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('batch-modal')">取消</button>
+                <button class="btn btn-primary" id="batch-submit-btn">导入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div class="modal-overlay" id="chat-modal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title">对话测试</h2>
+                <button class="modal-close" onclick="closeModal('chat-modal')">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">模型</label>
+                    <select class="form-input" id="chat-model">
+                        <option value="claude-4-5-opus">Claude 4.5 Opus</option>
+                        <option value="claude-4.1-opus">Claude 4.1 Opus</option>
+                        <option value="claude-4-sonnet">Claude 4 Sonnet</option>
+                        <option value="gemini-3-pro">Gemini 3 Pro</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                        <option value="gpt-5">GPT-5</option>
+                        <option value="gpt-4.1">GPT-4.1</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">消息</label>
+                    <textarea class="form-textarea" id="chat-message" placeholder="输入消息...">你是什么模型？</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">响应</label>
+                    <div id="chat-response" style="min-height: 100px; padding: 12px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; white-space: pre-wrap; color: var(--text-primary);">等待发送...</div>
+                </div>
+                <input type="hidden" id="chat-credential-id">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('chat-modal')">关闭</button>
+                <button class="btn btn-primary" id="chat-submit-btn">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="/js/common.js"></script>
+    <script>
+        let credentials = [];
+
+        // Toast 提示
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Modal 控制
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // 加载统计数据
+        async function loadStatistics() {
+            try {
+                const res = await fetch('/api/warp/statistics');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('stat-total').textContent = data.data.total;
+                    document.getElementById('stat-healthy').textContent = data.data.healthy;
+                    document.getElementById('stat-errors').textContent = data.data.errors;
+                    document.getElementById('stat-usage').textContent = data.data.totalUseCount;
+                }
+            } catch (e) {
+                console.error('加载统计失败:', e);
+            }
+        }
+
+        // 加载凭证列表
+        async function loadCredentials() {
+            document.getElementById('loading-state').style.display = 'flex';
+            document.getElementById('cards-grid').innerHTML = '';
+
+            try {
+                const res = await fetch('/api/warp/credentials');
+                const data = await res.json();
+                
+                if (data.success) {
+                    credentials = data.data;
+                    renderCredentials(credentials);
+                }
+            } catch (e) {
+                showToast('加载失败: ' + e.message, 'error');
+            } finally {
+                document.getElementById('loading-state').style.display = 'none';
+            }
+        }
+
+        // 渲染用量进度条
+        function renderQuotaBar(cred) {
+            // 如果没有用量数据
+            if (!cred.quotaLimit || cred.quotaLimit === 0) {
+                return `
+                    <div class="quota-bar-header">
+                        <span class="quota-bar-label">用量</span>
+                        <span class="quota-bar-value" style="color: var(--text-secondary);">点击刷新</span>
+                    </div>
+                    <div class="quota-bar">
+                        <div class="quota-bar-fill" style="width: 0%"></div>
+                    </div>
+                `;
+            }
+            
+            // 无限额度
+            if (cred.quotaLimit === -1) {
+                return `
+                    <div class="quota-bar-header">
+                        <span class="quota-bar-label">用量</span>
+                        <span class="quota-bar-value" style="color: #22c55e;">无限</span>
+                    </div>
+                    <div class="quota-bar">
+                        <div class="quota-bar-fill success" style="width: 100%"></div>
+                    </div>
+                `;
+            }
+            
+            const used = cred.quotaUsed || 0;
+            const limit = cred.quotaLimit;
+            const remaining = limit - used;
+            const percent = Math.min(100, Math.round((used / limit) * 100));
+            
+            let colorClass = 'success';
+            if (remaining < 50) colorClass = 'danger';
+            else if (remaining < 100) colorClass = 'warning';
+            
+            return `
+                <div class="quota-bar-header">
+                    <span class="quota-bar-label">用量</span>
+                    <span class="quota-bar-value ${colorClass}">${used}/${limit} (剩余 ${remaining})</span>
+                </div>
+                <div class="quota-bar">
+                    <div class="quota-bar-fill ${colorClass}" style="width: ${percent}%"></div>
+                </div>
+            `;
+        }
+
+        // 渲染凭证卡片
+        function renderCredentials(creds) {
+            const grid = document.getElementById('cards-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            document.getElementById('displayed-count').textContent = creds.length;
+
+            if (creds.length === 0) {
+                grid.innerHTML = '';
+                emptyState.style.display = 'flex';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            grid.innerHTML = creds.map(cred => {
+                const initial = (cred.name || cred.email || 'W')[0].toUpperCase();
+                const statusClass = cred.errorCount >= 3 ? 'inactive' : (cred.isActive ? 'active' : 'warning');
+                const statusText = cred.errorCount >= 3 ? '异常' : (cred.isActive ? '正常' : '禁用');
+                const expiresAt = cred.tokenExpiresAt ? new Date(cred.tokenExpiresAt).toLocaleString() : '未知';
+
+                return `
+                    <div class="warp-card" data-id="${cred.id}">
+                        <div class="warp-card-header">
+                            <div class="warp-card-info">
+                                <div class="warp-card-avatar">${initial}</div>
+                                <div>
+                                    <div class="warp-card-name">${cred.name || '未命名'}</div>
+                                    <div class="warp-card-email">${cred.email || '无邮箱'}</div>
+                                </div>
+                            </div>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="warp-card-body">
+                            <div class="warp-card-row">
+                                <span class="warp-card-label">使用次数</span>
+                                <span class="warp-card-value">${cred.useCount}</span>
+                            </div>
+                            <div class="warp-card-row">
+                                <span class="warp-card-label">Token 过期</span>
+                                <span class="warp-card-value">${expiresAt}</span>
+                            </div>
+                            <div class="warp-card-row">
+                                <span class="warp-card-label">错误次数</span>
+                                <span class="warp-card-value">${cred.errorCount}</span>
+                            </div>
+                        </div>
+                        <div class="quota-bar-container" id="quota-container-${cred.id}">
+                            ${renderQuotaBar(cred)}
+                        </div>
+                        <div class="warp-card-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="refreshToken(${cred.id})" title="刷新Token">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <polyline points="23 4 23 10 17 10"/>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="refreshQuota(${cred.id})" title="查询用量">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="openChatModal(${cred.id})" title="对话测试">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteCredential(${cred.id})" title="删除">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 刷新单个 Token
+        async function refreshToken(id) {
+            try {
+                const res = await fetch(`/api/warp/credentials/${id}/refresh`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Token 刷新成功');
+                    loadCredentials();
+                    loadStatistics();
+                } else {
+                    showToast('刷新失败: ' + data.error, 'error');
+                }
+            } catch (e) {
+                showToast('刷新失败: ' + e.message, 'error');
+            }
+        }
+
+        // 删除凭证
+        async function deleteCredential(id) {
+            if (!confirm('确定要删除这个账号吗？')) return;
+
+            try {
+                const res = await fetch(`/api/warp/credentials/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('删除成功');
+                    loadCredentials();
+                    loadStatistics();
+                } else {
+                    showToast('删除失败: ' + data.error, 'error');
+                }
+            } catch (e) {
+                showToast('删除失败: ' + e.message, 'error');
+            }
+        }
+
+        // 添加账号
+        async function addCredential() {
+            const name = document.getElementById('add-name').value.trim();
+            const refreshToken = document.getElementById('add-refresh-token').value.trim();
+
+            if (!refreshToken) {
+                showToast('请输入 Refresh Token', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/warp/credentials', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, refreshToken })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('添加成功');
+                    closeModal('add-modal');
+                    document.getElementById('add-name').value = '';
+                    document.getElementById('add-refresh-token').value = '';
+                    loadCredentials();
+                    loadStatistics();
+                } else {
+                    showToast('添加失败: ' + data.error, 'error');
+                }
+            } catch (e) {
+                showToast('添加失败: ' + e.message, 'error');
+            }
+        }
+
+        // 解析文本格式的批量导入数据
+        function parseTextFormat(text) {
+            const accounts = [];
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            
+            let currentName = null;
+            for (const line of lines) {
+                // 匹配 "第N张" 格式
+                const nameMatch = line.match(/^第(\d+)张$/);
+                if (nameMatch) {
+                    currentName = `账号${nameMatch[1]}`;
+                    continue;
+                }
+                
+                // 如果是 token（以 AMf- 开头或长度超过100）
+                if (line.startsWith('AMf-') || line.length > 100) {
+                    accounts.push({
+                        refreshToken: line,
+                        name: currentName || `账号${accounts.length + 1}`
+                    });
+                    currentName = null;
+                }
+            }
+            
+            return accounts;
+        }
+
+        // 批量导入
+        async function batchImport() {
+            const dataStr = document.getElementById('batch-data').value.trim();
+
+            if (!dataStr) {
+                showToast('请输入账号数据', 'error');
+                return;
+            }
+
+            let accounts;
+            
+            // 尝试 JSON 格式
+            if (dataStr.startsWith('[') || dataStr.startsWith('{')) {
+                try {
+                    accounts = JSON.parse(dataStr);
+                    if (!Array.isArray(accounts)) {
+                        accounts = [accounts];
+                    }
+                } catch (e) {
+                    showToast('JSON 格式错误', 'error');
+                    return;
+                }
+            } else {
+                // 文本格式
+                accounts = parseTextFormat(dataStr);
+                if (accounts.length === 0) {
+                    showToast('未识别到有效的 token', 'error');
+                    return;
+                }
+            }
+
+            try {
+                const res = await fetch('/api/warp/credentials/batch-import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accounts })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast(`导入完成: 成功 ${data.data.success}, 失败 ${data.data.failed}`);
+                    closeModal('batch-modal');
+                    document.getElementById('batch-data').value = '';
+                    loadCredentials();
+                    loadStatistics();
+                } else {
+                    showToast('导入失败: ' + data.error, 'error');
+                }
+            } catch (e) {
+                showToast('导入失败: ' + e.message, 'error');
+            }
+        }
+
+        // 刷新全部 Token
+        async function refreshAllTokens() {
+            if (!confirm('确定要刷新所有账号的 Token 吗？')) return;
+
+            try {
+                showToast('正在刷新...');
+                const res = await fetch('/api/warp/credentials/refresh-all', { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    const success = data.data.filter(r => r.success).length;
+                    const failed = data.data.filter(r => !r.success).length;
+                    showToast(`刷新完成: 成功 ${success}, 失败 ${failed}`);
+                    loadCredentials();
+                    loadStatistics();
+                } else {
+                    showToast('刷新失败: ' + data.error, 'error');
+                }
+            } catch (e) {
+                showToast('刷新失败: ' + e.message, 'error');
+            }
+        }
+
+        // 健康检查
+        async function healthCheck() {
+            try {
+                const res = await fetch('/api/warp/health');
+                const data = await res.json();
+                
+                if (data.success) {
+                    const h = data.data;
+                    showToast(`健康状态: ${h.isHealthy ? '正常' : '异常'} | 总数: ${h.total} | 健康: ${h.healthy}`);
+                } else {
+                    showToast('检查失败: ' + data.error, 'error');
+                }
+            } catch (e) {
+                showToast('检查失败: ' + e.message, 'error');
+            }
+        }
+
+        // 更新进度条显示
+        function updateQuotaBar(id, quota) {
+            const container = document.getElementById(`quota-container-${id}`);
+            if (!container) return;
+            
+            const cred = {
+                quotaLimit: quota.isUnlimited ? -1 : quota.requestLimit,
+                quotaUsed: quota.requestsUsed
+            };
+            container.innerHTML = renderQuotaBar(cred);
+        }
+
+        // 刷新单个用量
+        async function refreshQuota(id) {
+            const container = document.getElementById(`quota-container-${id}`);
+            if (container) {
+                container.innerHTML = `
+                    <div class="quota-bar-header">
+                        <span class="quota-bar-label">用量</span>
+                        <span class="quota-bar-value" style="color: var(--text-secondary);">查询中...</span>
+                    </div>
+                    <div class="quota-bar">
+                        <div class="quota-bar-fill" style="width: 0%"></div>
+                    </div>
+                `;
+            }
+            
+            try {
+                const res = await fetch(`/w/api/quota?credentialId=${id}`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    const q = data.data;
+                    updateQuotaBar(id, q);
+                    
+                    // 更新本地数据
+                    const cred = credentials.find(c => c.id === id);
+                    if (cred) {
+                        cred.quotaLimit = q.isUnlimited ? -1 : q.requestLimit;
+                        cred.quotaUsed = q.requestsUsed;
+                    }
+                    
+                    showToast(`用量: ${q.requestsUsed}/${q.requestLimit}`);
+                } else {
+                    if (container) {
+                        container.innerHTML = `
+                            <div class="quota-bar-header">
+                                <span class="quota-bar-label">用量</span>
+                                <span class="quota-bar-value" style="color: #ef4444;">查询失败</span>
+                            </div>
+                            <div class="quota-bar">
+                                <div class="quota-bar-fill danger" style="width: 0%"></div>
+                            </div>
+                        `;
+                    }
+                    showToast('查询失败: ' + data.error, 'error');
+                }
+            } catch (e) {
+                showToast('查询失败: ' + e.message, 'error');
+            }
+        }
+
+        // 刷新全部用量
+        async function refreshAllQuotas() {
+            showToast('正在查询所有账户用量...');
+            
+            // 先将所有用量显示为查询中
+            credentials.forEach(cred => {
+                const container = document.getElementById(`quota-container-${cred.id}`);
+                if (container) {
+                    container.innerHTML = `
+                        <div class="quota-bar-header">
+                            <span class="quota-bar-label">用量</span>
+                            <span class="quota-bar-value" style="color: var(--text-secondary);">查询中...</span>
+                        </div>
+                        <div class="quota-bar">
+                            <div class="quota-bar-fill" style="width: 0%"></div>
+                        </div>
+                    `;
+                }
+            });
+            
+            try {
+                const res = await fetch('/w/api/quotas');
+                const data = await res.json();
+                
+                if (data.success) {
+                    const { summary, accounts } = data.data;
+                    
+                    // 更新每个卡片的用量显示
+                    for (const q of accounts) {
+                        if (q.error) {
+                            const container = document.getElementById(`quota-container-${q.credentialId}`);
+                            if (container) {
+                                container.innerHTML = `
+                                    <div class="quota-bar-header">
+                                        <span class="quota-bar-label">用量</span>
+                                        <span class="quota-bar-value" style="color: #ef4444;">查询失败</span>
+                                    </div>
+                                    <div class="quota-bar">
+                                        <div class="quota-bar-fill danger" style="width: 0%"></div>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            updateQuotaBar(q.credentialId, q);
+                            
+                            // 更新本地数据
+                            const cred = credentials.find(c => c.id === q.credentialId);
+                            if (cred) {
+                                cred.quotaLimit = q.isUnlimited ? -1 : q.requestLimit;
+                                cred.quotaUsed = q.requestsUsed;
+                            }
+                        }
+                    }
+                    
+                    showToast(`用量汇总: 总额度 ${summary.totalLimit}, 已用 ${summary.totalUsed}, 剩余 ${summary.totalRemaining}`);
+                } else {
+                    showToast('查询失败: ' + data.error, 'error');
+                }
+            } catch (e) {
+                showToast('查询失败: ' + e.message, 'error');
+            }
+        }
+
+        // 打开对话模态框
+        function openChatModal(credentialId) {
+            document.getElementById('chat-credential-id').value = credentialId;
+            document.getElementById('chat-response').textContent = '等待发送...';
+            openModal('chat-modal');
+        }
+
+        // 发送对话
+        async function sendChat() {
+            const credentialId = document.getElementById('chat-credential-id').value;
+            const model = document.getElementById('chat-model').value;
+            const message = document.getElementById('chat-message').value.trim();
+            const responseDiv = document.getElementById('chat-response');
+            
+            if (!message) {
+                showToast('请输入消息', 'error');
+                return;
+            }
+            
+            responseDiv.textContent = '正在请求...';
+            
+            try {
+                const res = await fetch('/api/warp/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        credentialId: parseInt(credentialId),
+                        query: message,
+                        model: model
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    responseDiv.textContent = data.data.response || '(空响应)';
+                    showToast('请求成功');
+                } else {
+                    responseDiv.textContent = '错误: ' + data.error;
+                    showToast('请求失败: ' + data.error, 'error');
+                }
+            } catch (e) {
+                responseDiv.textContent = '错误: ' + e.message;
+                showToast('请求失败: ' + e.message, 'error');
+            }
+        }
+
+        // 搜索
+        function filterCredentials(keyword) {
+            const filtered = credentials.filter(c => 
+                (c.name && c.name.toLowerCase().includes(keyword.toLowerCase())) ||
+                (c.email && c.email.toLowerCase().includes(keyword.toLowerCase()))
+            );
+            renderCredentials(filtered);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 初始化侧边栏
+            const sidebarContainer = document.getElementById('sidebar-container');
+            if (sidebarContainer) {
+                sidebarContainer.innerHTML = getSidebarHTML();
+                initSidebar('warp');
+                updateSidebarStats();
+            }
+
+            loadCredentials();
+            loadStatistics();
+
+            // 事件绑定
+            document.getElementById('add-account-btn').addEventListener('click', () => openModal('add-modal'));
+            document.getElementById('empty-add-btn').addEventListener('click', () => openModal('add-modal'));
+            document.getElementById('batch-import-btn').addEventListener('click', () => openModal('batch-modal'));
+            document.getElementById('add-submit-btn').addEventListener('click', addCredential);
+            document.getElementById('batch-submit-btn').addEventListener('click', batchImport);
+            document.getElementById('refresh-all-btn').addEventListener('click', refreshAllTokens);
+            document.getElementById('refresh-all-quota-btn').addEventListener('click', refreshAllQuotas);
+            document.getElementById('health-check-btn').addEventListener('click', healthCheck);
+            document.getElementById('chat-submit-btn').addEventListener('click', sendChat);
+
+            // 搜索
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                filterCredentials(e.target.value);
+            });
+
+            // 点击 modal 外部关闭
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        overlay.classList.remove('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

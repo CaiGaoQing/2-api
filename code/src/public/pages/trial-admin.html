@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>试用审批 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .screenshot-preview {
+            max-width: 80px;
+            max-height: 60px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: transform var(--transition-fast);
+            object-fit: cover;
+        }
+        .screenshot-preview:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-warning);
+        }
+        .status-approved {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+        }
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-danger);
+        }
+        .app-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .app-table th,
+        .app-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .app-table th {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--bg-tertiary);
+        }
+        .app-table tr:hover {
+            background: var(--bg-card-hover);
+        }
+        .app-table td {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-approve {
+            background: var(--accent-success);
+            color: white;
+        }
+        .btn-approve:hover {
+            background: #059669;
+        }
+        .btn-reject {
+            background: var(--accent-danger);
+            color: white;
+        }
+        .btn-reject:hover {
+            background: #dc2626;
+        }
+        .modal-screenshot {
+            max-width: 90vw;
+            max-height: 80vh;
+            border-radius: var(--radius-lg);
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .filter-tab {
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .filter-tab:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+        .filter-tab.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+        .filter-tab .count {
+            margin-left: 6px;
+            padding: 2px 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            font-size: 11px;
+        }
+        .api-key-dplay {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            background: var(--bg-tertiary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .api-key-display:hover {
+            background: var(--bg-card-hover);
+        }
+        .empty-row td {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="8.5" cy="7" r="4"/>
+                                <polyline points="17 11 19 13 23 9"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">试用审批</h1>
+                            <p class="page-subtitle">管理用户的试用申请</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-secondary" id="refresh-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                        刷新
+                    </button>
+                </div>
+            </header>
+
+            <div class="stats-cards" id="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">总申请数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-pending">0</div>
+                        <div class="stat-label">待审批</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-approved">0</div>
+                        <div class="stat-label">已通过</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--accent-danger-bg); color: var(--accent-danger);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="15" y1="9" x2="9" y2="15"/>
+                            <line x1="9" y1="9" x2="15" y2="15"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-rejected">0</div>
+                        <div class="stat-label">已拒绝</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-status="">
+                        全部 <span class="count" id="count-all">0</span>
+                    </button>
+                    <button class="filter-tab" data-status="pending">
+                        待审批 <span class="count" id="count-pending">0</span>
+                    </button>
+                    <button class="filter-tab" data-status="approved">
+                        已通过 <span class="count" id="count-approved">0</span>
+                    </button>
+                    <button class="filter-tab" data-status="rejected">
+                        已拒绝 <span class="count" id="count-rejected">0</span>
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="app-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>咸鱼名称</th>
+                                <th>邮箱</th>
+                                <th>来源</th>
+                                <th>截图</th>
+                                <th>状态</th>
+                                <th>API Key</th>
+                                <th>申请时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="app-tbody">
+                            <tr class="empty-row">
+                                <td colspan="9">加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Approve Modal -->
+    <div class="modal-overlay" id="approve-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">审批通过</h2>
+                <button class="modal-close" onclick="closeApproveModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--text-secondary);">
+                    确认通过此申请？系统将自动生成一个限制 <strong>$50</strong> 额度、有效期 <strong>24小时</strong> 的 API Key。
+                </p>
+                <div class="form-group">
+                    <label class="form-label">额度限制 (美元)</label>
+                    <input type="number" class="form-input" id="cost-limit" value="50" min="1" max="1000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">有效期 (小时)</label>
+                    <input type="number" class="form-input" id="expire-hours" value="24" min="1" max="720">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeApproveModal()">取消</button>
+                <button class="btn btn-primary" id="confirm-approve-btn">确认通过</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div class="modal-overlay" id="reject-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">拒绝申请</h2>
+                <button class="modal-close" onclick="closeRejectModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">拒绝原因</label>
+                    <textarea class="form-textarea" id="reject-reason" placeholder="请输入拒绝原因（可选）"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRejectModal()">取消</button>
+                <button class="btn btn-danger" id="confirm-reject-btn">确认拒绝</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screenshot Modal -->
+    <div class="modal-overlay" id="screenshot-modal" onclick="closeScreenshotModal()">
+        <img class="modal-screenshot" id="screenshot-img" src="" alt="订单截图">
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script>
+        let applications = [];
+        let currentFilter = '';
+        let currentPage = 1;
+        let stats = { total: 0, pending: 0, approved: 0, rejected: 0 };
+        let currentAppId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('sidebar-container').innerHTML = getSidebarHTML();
+            initSidebar('trial-admin');
+
+            if (!await checkAuth()) return;
+
+            loadApplications();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('refresh-btn').addEventListener('click', loadApplications);
+
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentFilter = tab.dataset.status;
+                    currentPage = 1;
+                    loadApplications();
+                });
+            });
+
+            document.getElementById('confirm-approve-btn').addEventListener('click', confirmApprove);
+            document.getElementById('confirm-reject-btn').addEventListener('click', confirmReject);
+        }
+
+        async function loadApplications() {
+            try {
+                const params = new URLSearchParams({ page: currentPage, pageSize: 50 });
+                if (currentFilter) params.append('status', currentFilter);
+
+                const res = await fetch(`/api/trial/admin/list?${params}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    applications = data.data.applications;
+                    renderTable();
+                    updateStats();
+                } else {
+                    showToast(data.error || '加载失败', 'error');
+                }
+            } catch (e) {
+                showToast('网络错误', 'error');
+            }
+        }
+
+        async function updateStats() {
+            try {
+                const res = await fetch('/api/trial/admin/stats', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    stats = data.data;
+                    document.getElementById('stat-total').textContent = stats.total;
+                    document.getElementById('stat-pending').textContent = stats.pending;
+                    document.getElementById('stat-approved').textContent = stats.approved;
+                    document.getElementById('stat-rejected').textContent = stats.rejected;
+                    document.getElementById('count-all').textContent = stats.total;
+                    document.getElementById('count-pending').textContent = stats.pending;
+                    document.getElementById('count-approved').textContent = stats.approved;
+                    document.getElementById('count-rejected').textContent = stats.rejected;
+                }
+            } catch (e) {}
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('app-tbody');
+            if (applications.length === 0) {
+                tbody.innerHTML = '<tr class="empty-row"><td colspan="9">暂无记录</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = applications.map(app => `
+                <tr>
+                    <td>${app.id}</td>
+                    <td><strong>${escapeHtml(app.xianyuName)}</strong></td>
+                    <td>${escapeHtml(app.email)}</td>
+                    <td>${getSourceText(app.source)}</td>
+                    <td>
+                        ${app.orderScreenshot ?
+                            `<img src="${app.orderScreenshot}" class="screenshot-preview" onclick="showScreenshot('${app.orderScreenshot}')" alt="截图">` :
+                            '<span style="color: var(--text-muted)">无</span>'}
+                    </td>
+                    <td><span class="status-badge status-${app.status}">${getStatusText(app.status)}</span></td>
+                    <td>
+                        ${app.apiKey ?
+                            `<span class="api-key-display" onclick="copyToClipboard('${app.apiKey}')" title="点击复制">${app.apiKey.substring(0, 20)}...</span>` :
+                            '-'}
+                    </td>
+                    <td>${formatDateTime(app.createdAt)}</td>
+                    <td>
+                        ${app.status === 'pending' ? `
+                            <div class="action-btns">
+                                <button class="btn btn-sm btn-approve" onclick="openApproveModal(${app.id})">通过</button>
+                                <button class="btn btn-sm btn-reject" onclick="openRejectModal(${app.id})">拒绝</button>
+                            </div>
+                        ` : `
+                            <button class="btn btn-sm btn-secondary" onclick="deleteApplication(${app.id})">删除</button>
+                        `}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function getStatusText(status) {
+            const map = { pending: '待审批', approved: '已通过', rejected: '已拒绝' };
+            return map[status] || status;
+        }
+
+        function getSourceText(source) {
+            const map = { xianyu: '咸鱼', github: 'GitHub', twitter: 'Twitter/X', friend: '朋友推荐', other: '其他' };
+            return map[source] || source || '-';
+        }
+
+        function showScreenshot(src) {
+            document.getElementById('screenshot-img').src = src;
+            document.getElementById('screenshot-modal').classList.add('active');
+        }
+
+        function closeScreenshotModal() {
+            document.getElementById('screenshot-modal').classList.remove('active');
+        }
+
+        function openApproveModal(id) {
+            currentAppId = id;
+            document.getElementById('approve-modal').classList.add('active');
+        }
+
+        function closeApproveModal() {
+            document.getElementById('approve-modal').classList.remove('active');
+            currentAppId = null;
+        }
+
+        function openRejectModal(id) {
+            currentAppId = id;
+            document.getElementById('reject-modal').classList.add('active');
+        }
+
+        function closeRejectModal() {
+            document.getElementById('reject-modal').classList.remove('active');
+            document.getElementById('reject-reason').value = '';
+            currentAppId = null;
+        }
+
+        async function confirmApprove() {
+            if (!currentAppId) return;
+
+            const costLimit = parseFloat(document.getElementById('cost-limit').value) || 50;
+            const expireHours = parseInt(document.getElementById('expire-hours').value) || 24;
+
+            const btn = document.getElementById('confirm-approve-btn');
+            btn.disabled = true;
+            btn.textContent = '处理中...';
+
+            try {
+                const res = await fetch(`/api/trial/admin/${currentAppId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ costLimit, expireHours })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('审批通过成功', 'success');
+                    closeApproveModal();
+                    loadApplications();
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            } catch (e) {
+                showToast('网络错误', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '确认通过';
+            }
+        }
+
+        async function confirmReject() {
+            if (!currentAppId) return;
+
+            const reason = document.getElementById('reject-reason').value.trim();
+
+            const btn = document.getElementById('confirm-reject-btn');
+            btn.disabled = true;
+            btn.textContent = '处理中...';
+
+            try {
+                const res = await fetch(`/api/trial/admin/${currentAppId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('已拒绝申请', 'success');
+                    closeRejectModal();
+                    loadApplications();
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            } catch (e) {
+                showToast('网络错误', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '确认拒绝';
+            }
+        }
+
+        async function deleteApplication(id) {
+            if (!confirm('确定要删除此申请记录吗？')) return;
+            try {
+                const res = await fetch(`/api/trial/admin/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('删除成功', 'success');
+                    loadApplications();
+                } else {
+                    showToast(data.error || '删除失败', 'error');
+                }
+            } catch (e) {
+                showToast('网络错误', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

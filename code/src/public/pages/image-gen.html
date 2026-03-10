@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 生图 - All-2-API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .public-page {
+            min-height: 100vh;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+        }
+        .public-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .public-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .public-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-purple) 100%);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: white;
+        }
+        .public-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .public-nav {
+            display: flex;
+            gap: 24px;
+        }
+        .public-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color var(--transition-fast);
+        }
+        .public-nav a:hover,
+        .public-nav a.active {
+            color: var(--text-primary);
+        }
+        .public-content {
+            flex: 1;
+            padding: 20px 24px;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .image-gen-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        .image-gen-header {
+            text-align: center;
+            margin-bottom: 16px;
+            padding: 4px 0;
+            flex-shrink: 0;
+        }
+        .image-gen-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .image-gen-header p {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+        .gen-layout {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 20px;
+            align-items: stretch;
+            overflow: hidden;
+        }
+        @media (max-width: 900px) {
+            .gen-layout {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+            }
+        }
+        .gen-panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-primary);
+            padding: 20px;
+        }
+        .gen-left-col {
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .gen-panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .gen-panel-title svg {
+            width: 20px;
+            height: 20px;
+            color: var(--primary);
+        }
+        .gen-form-group {
+            margin-bottom: 12px;
+        }
+        .gen-form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .gen-form-group input,
+        .gen-form-group select,
+        .gen-form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        .gen-form-group input:focus,
+        .gen-form-group select:focus,
+        .gen-form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        .gen-form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .gen-form-hint {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+        .gen-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .gen-btn {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            color: white;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+        }
+        .gen-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        .gen-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .gen-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+        .gen-btn .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .gen-result-area {
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .gen-result-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-tertiary);
+            gap: 12px;
+        }
+        .gen-result-empty svg {
+            width: 64px;
+            height: 64px;
+            opacity: 0.3;
+        }
+        .gen-result-empty p {
+            font-size: 14px;
+        }
+        .gen-result-image {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .gen-result-image:hover {
+            transform: scale(1.02);
+        }
+        .gen-result-info {
+            padding: 12px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+        .gen-result-info strong {
+            color: var(--text-primary);
+        }
+        .gen-history {
+            margin-top: 24px;
+        }
+        .gen-history-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        .gen-history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+        }
+        .gen-history-item {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .gen-history-item:hover {
+            border-color: var(--primary);
+        }
+        .gen-history-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .key-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .key-status.saved {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+        .key-status.unsaved {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        .gen-progress {
+            padding: 16px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .gen-progress-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .gen-progress-bar {
+            height: 4px;
+            background: var(--border-primary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .gen-progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #8b5cf6);
+            border-radius: 2px;
+            animation: progress-indeterminate 1.5s ease-in-out infinite;
+            width: 30%;
+        }
+        @keyframes progress-indeterminate {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+        }
+        .image-fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .image-fullscreen img {
+            max-width: 95%;
+            max-height: 95%;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="public-page">
+        <script src="/js/public-header.js"></script>
+        <script>renderPublicHeader('image-gen');</script>
+
+        <main class="public-content">
+    <div class="image-gen-container">
+        <div class="image-gen-header">
+            <h1>🎨 AI 图片生成</h1>
+            <p>输入 API Key，选择模型，输入提示词，即刻生成图片</p>
+        </div>
+
+        <div class="gen-layout">
+            <!-- Left Panel: Config + Prompt -->
+            <div class="gen-left-col">
+                <div class="gen-panel">
+                    <div class="gen-panel-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                        </svg>
+                        API 配置
+                        <span class="key-status unsaved" id="key-status">未配置</span>
+                    </div>
+                    <div class="gen-form-group">
+                        <label>API Key</label>
+                        <input type="password" id="api-key" placeholder="输入你的 API Key（sk-...）">
+                        <p class="gen-form-hint">Key 仅保存在浏览器本地，不会上传到服务器</p>
+                    </div>
+                    <div class="gen-form-group">
+                        <label>通道</label>
+                        <select id="channel-select">
+                            <option value="flow">Flow（Gemini / Imagen 图片）</option>
+                            <option value="do">DigitalOcean（GPT Image）</option>
+                            <option value="grok">Grok Imagine（专用生图）</option>
+                        </select>
+                    </div>
+                    <div class="gen-form-group">
+                        <label>模型</label>
+                        <select id="model-select">
+                        </select>
+                    </div>
+                    <div class="gen-form-row">
+                        <div class="gen-form-group">
+                            <label>尺寸</label>
+                            <select id="size-select">
+                                <option value="1024x1024">1024×1024</option>
+                                <option value="1792x1024">1792×1024（横版）</option>
+                                <option value="1024x1792">1024×1792（竖版）</option>
+                            </select>
+                        </div>
+                        <div class="gen-form-group">
+                            <label>数量</label>
+                            <select id="n-select">
+                                <option value="1">1 张</option>
+                                <option value="2">2 张</option>
+                                <option value="4">4 张</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="gen-panel">
+                    <div class="gen-panel-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        提示词
+                    </div>
+                    <div class="gen-form-group">
+                        <textarea id="prompt-input" placeholder="描述你想要生成的图片内容...&#10;&#10;例如：一只可爱的橘猫坐在窗台上，窗外是雪景，温暖的室内灯光，水彩画风格"></textarea>
+                    </div>
+                    <button class="gen-btn" id="generate-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        生成图片
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Result -->
+            <div class="gen-panel gen-result-area">
+                <div class="gen-panel-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    生成结果
+                </div>
+
+                <div id="result-container">
+                    <div class="gen-result-empty" id="empty-result">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                        <p>输入提示词后点击「生成图片」</p>
+                    </div>
+                </div>
+
+                <!-- History -->
+                <div class="gen-history" id="history-section" style="display: none;">
+                    <div class="gen-history-title">历史记录</div>
+                    <div class="gen-history-grid" id="history-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/image-gen.js"></script>
+</body>
+</html>

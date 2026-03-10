@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>错误日志 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon" style="background: linear-gradient(135deg, var(--accent-warning), var(--accent-danger));">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">错误日志</h1>
+                            <p class="page-subtitle">查看 API 请求错误记录 (状态码 >= 400)</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area" id="error-logs-page">
+                <!-- 统计卡片 -->
+                <div class="logs-stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="logs-stat-card">
+                        <div class="logs-stat-icon error">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="15" y1="9" x2="9" y2="15"/>
+                                <line x1="9" y1="9" x2="15" y2="15"/>
+                            </svg>
+                        </div>
+                        <div class="logs-stat-content">
+                            <div class="logs-stat-value" id="error-logs-total-count">0</div>
+                            <div class="logs-stat-label">错误总数</div>
+                        </div>
+                    </div>
+                    <div class="logs-stat-card">
+                        <div class="logs-stat-icon warning">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                        </div>
+                        <div class="logs-stat-content">
+                            <div class="logs-stat-value" id="error-logs-4xx-count">0</div>
+                            <div class="logs-stat-label">4xx 错误</div>
+                        </div>
+                    </div>
+                    <div class="logs-stat-card">
+                        <div class="logs-stat-icon error">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                        </div>
+                        <div class="logs-stat-content">
+                            <div class="logs-stat-value" id="error-logs-5xx-count">0</div>
+                            <div class="logs-stat-label">5xx 错误</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 筛选器 -->
+                <div class="logs-filters">
+                    <div class="logs-filter-group">
+                        <label class="logs-filter-label">开始日期</label>
+                        <input type="date" class="form-input logs-filter-input" id="error-logs-filter-start">
+                    </div>
+                    <div class="logs-filter-group">
+                        <label class="logs-filter-label">结束日期</label>
+                        <input type="date" class="form-input logs-filter-input" id="error-logs-filter-end">
+                    </div>
+                    <div class="logs-filter-actions">
+                        <button class="btn btn-primary btn-sm" id="error-logs-search-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                            </svg>
+                            查询
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="error-logs-reset-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="1 4 1 10 7 10"/>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                            </svg>
+                            重置
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 表格 -->
+                <div class="logs-table-wrapper">
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 160px;">时间</th>
+                                <th style="width: 120px;">IP 地址</th>
+                                <th style="width: 100px;">API Key</th>
+                                <th style="width: 150px;">路径</th>
+                                <th style="width: 80px;">状态码</th>
+                                <th style="width: 80px;">耗时</th>
+                                <th>错误信息</th>
+                            </tr>
+                        </thead>
+                        <tbody id="error-logs-list"></tbody>
+                    </table>
+                </div>
+
+                <!-- 空状态 -->
+                <div class="empty-state" id="error-logs-empty" style="display: none;">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <h3 class="empty-title">没有错误日志</h3>
+                    <p class="empty-description">太棒了！目前没有任何 API 请求错误</p>
+                </div>
+
+                <!-- 分页 -->
+                <div class="logs-pagination" id="error-logs-pagination">
+                    <div class="logs-pagination-info">
+                        显示 <span id="error-logs-showing-start">0</span> - <span id="error-logs-showing-end">0</span>，共 <span id="error-logs-total">0</span> 条
+                    </div>
+                    <div class="logs-pagination-controls">
+                        <button class="btn btn-secondary btn-sm" id="error-logs-prev-btn" disabled>
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"/>
+                            </svg>
+                            上一页
+                        </button>
+                        <span class="logs-page-info">第 <span id="error-logs-current-page">1</span> / <span id="error-logs-total-pages">1</span> 页</span>
+                        <button class="btn btn-secondary btn-sm" id="error-logs-next-btn" disabled>
+                            下一页
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/error-logs.js"></script>
+</body>
+</html>

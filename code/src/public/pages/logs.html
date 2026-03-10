@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 日志 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">API 日志</h1>
+                            <p class="page-subtitle">查看 API 请求日志和统计</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area" id="logs-page">
+                <div class="logs-stats-grid">
+                    <div class="logs-stat-card">
+                        <div class="logs-stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                        </div>
+                        <div class="logs-stat-content">
+                            <div class="logs-stat-value" id="logs-total-requests">0</div>
+                            <div class="logs-stat-label">总请求数</div>
+                        </div>
+                    </div>
+                    <div class="logs-stat-card">
+                        <div class="logs-stat-icon success">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+                                <polyline points="16 7 22 7 22 13"/>
+                            </svg>
+                        </div>
+                        <div class="logs-stat-content">
+                            <div class="logs-stat-value" id="logs-total-input-tokens">0</div>
+                            <div class="logs-stat-label">输入 Tokens</div>
+                        </div>
+                    </div>
+                    <div class="logs-stat-card">
+                        <div class="logs-stat-icon info">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/>
+                                <polyline points="16 17 22 17 22 11"/>
+                            </svg>
+                        </div>
+                        <div class="logs-stat-content">
+                            <div class="logs-stat-value" id="logs-total-output-tokens">0</div>
+                            <div class="logs-stat-label">输出 Tokens</div>
+                        </div>
+                    </div>
+                    <div class="logs-stat-card">
+                        <div class="logs-stat-icon warning">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                        </div>
+                        <div class="logs-stat-content">
+                            <div class="logs-stat-value" id="logs-avg-duration">0ms</div>
+                            <div class="logs-stat-label">平均耗时</div>
+                        </div>
+                    </div>
+                    <div class="logs-stat-card">
+                        <div class="logs-stat-icon error">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                        </div>
+                        <div class="logs-stat-content">
+                            <div class="logs-stat-value" id="logs-error-count">0</div>
+                            <div class="logs-stat-label">错误数</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="channel-stats-section" id="channel-stats-section" style="margin-bottom: 20px;">
+                    <h3 style="font-size: 14px; font-weight: 600; color: #e0e0e0; margin-bottom: 12px;">渠道统计</h3>
+                    <div class="logs-table-wrapper">
+                        <table class="logs-table" style="font-size: 13px;">
+                            <thead>
+                                <tr>
+                                    <th>渠道</th>
+                                    <th>总请求</th>
+                                    <th>成功</th>
+                                    <th>错误</th>
+                                    <th>连通率</th>
+                                    <th>输入 Tokens</th>
+                                    <th>输出 Tokens</th>
+                                    <th>平均耗时</th>
+                                </tr>
+                            </thead>
+                            <tbody id="channel-stats-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="logs-filters">
+                    <div class="logs-filter-group">
+                        <label class="logs-filter-label">IP 地址</label>
+                        <input type="text" class="form-input logs-filter-input" id="logs-filter-ip" placeholder="筛选 IP...">
+                    </div>
+                    <div class="logs-filter-group">
+                        <label class="logs-filter-label">模型</label>
+                        <select class="form-select logs-filter-input" id="logs-filter-model">
+                            <option value="">全部模型</option>
+                            <option value="claude-sonnet-4-20250514">claude-sonnet-4</option>
+                            <option value="claude-opus-4-5-20251101">claude-opus-4.5</option>
+                            <option value="claude-3-5-sonnet-20241022">claude-3.5-sonnet</option>
+                            <option value="claude-3-5-haiku-20241022">claude-3.5-haiku</option>
+                        </select>
+                    </div>
+                    <div class="logs-filter-group">
+                        <label class="logs-filter-label">状态码</label>
+                        <select class="form-select logs-filter-input" id="logs-filter-status">
+                            <option value="">全部状态</option>
+                            <option value="200">200 成功</option>
+                            <option value="400">400 错误请求</option>
+                            <option value="401">401 未授权</option>
+                            <option value="429">429 限流</option>
+                            <option value="500">500 服务器错误</option>
+                        </select>
+                    </div>
+                    <div class="logs-filter-group">
+                        <label class="logs-filter-label">渠道</label>
+                        <select class="form-select logs-filter-input" id="logs-filter-channel">
+                            <option value="">全部渠道</option>
+                            <option value="kiro">Kiro</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="antigravity">Antigravity</option>
+                            <option value="orchids">Orchids</option>
+                            <option value="Warp">Warp</option>
+                            <option value="Vertex">Vertex</option>
+                            <option value="Bedrock">Bedrock</option>
+                            <option value="AMI">AMI</option>
+                            <option value="Flow">Flow</option>
+                            <option value="codex">Codex</option>
+                            <option value="DO">DO</option>
+                        </select>
+                    </div>
+                    <div class="logs-filter-group">
+                        <label class="logs-filter-label">API Key</label>
+                        <input type="text" class="form-input logs-filter-input" id="logs-filter-apikey" placeholder="Key 前缀...">
+                    </div>
+                    <div class="logs-filter-group">
+                        <label class="logs-filter-label">开始日期</label>
+                        <input type="date" class="form-input logs-filter-input" id="logs-filter-start">
+                    </div>
+                    <div class="logs-filter-group">
+                        <label class="logs-filter-label">结束日期</label>
+                        <input type="date" class="form-input logs-filter-input" id="logs-filter-end">
+                    </div>
+                    <div class="logs-filter-actions">
+                        <button class="btn btn-primary btn-sm" id="logs-search-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                            </svg>
+                            查询
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="logs-reset-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="1 4 1 10 7 10"/>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                            </svg>
+                            重置
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="logs-cleanup-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            清理日志
+                        </button>
+                    </div>
+                </div>
+
+                <div class="logs-table-wrapper">
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 180px;">时间</th>
+                                <th style="width: 120px;">IP 地址</th>
+                                <th style="width: 100px;">API Key</th>
+                                <th style="width: 80px;">渠道</th>
+                                <th style="width: 150px;">模型</th>
+                                <th style="width: 80px;">类型</th>
+                                <th style="width: 100px;">输入/输出</th>
+                                <th style="width: 80px;">耗时</th>
+                                <th style="width: 80px;">状态</th>
+                                <th style="width: 80px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-list"></tbody>
+                    </table>
+                </div>
+
+                <div class="logs-pagination">
+                    <div class="logs-pagination-info">
+                        显示 <span id="logs-showing-start">0</span> - <span id="logs-showing-end">0</span>，共 <span id="logs-total">0</span> 条
+                    </div>
+                    <div class="logs-pagination-controls">
+                        <button class="btn btn-secondary btn-sm" id="logs-prev-btn" disabled>
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"/>
+                            </svg>
+                            上一页
+                        </button>
+                        <span class="logs-page-info">第 <span id="logs-current-page">1</span> / <span id="logs-total-pages">1</span> 页</span>
+                        <button class="btn btn-secondary btn-sm" id="logs-next-btn" disabled>
+                            下一页
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 日志详情模态框 -->
+    <div class="modal-overlay" id="log-detail-modal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title">日志详情</h3>
+                <button class="modal-close" id="log-detail-close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" id="log-detail-content">
+                <!-- 动态填充 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="log-detail-copy">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    复制 JSON
+                </button>
+                <button class="btn btn-primary" id="log-detail-close-btn">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 清理确认模态框 -->
+    <div class="modal-overlay" id="cleanup-modal">
+        <div class="modal" style="max-width: 420px;">
+            <div class="modal-header">
+                <h3 class="modal-title">清理日志</h3>
+                <button class="modal-close" id="cleanup-modal-close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">保留最近多少天的日志？</label>
+                    <input type="number" class="form-input" id="cleanup-days" value="30" min="1" max="365">
+                    <p class="form-hint">超过此天数的日志将被永久删除，此操作不可恢复。</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cleanup-cancel">取消</button>
+                <button class="btn btn-danger" id="cleanup-confirm">确认清理</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/logs.js"></script>
+</body>
+</html>

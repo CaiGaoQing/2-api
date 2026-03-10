@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>兑换码 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .public-page {
+            min-height: 100vh;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+        }
+        .public-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .public-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .public-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-purple) 100%);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: white;
+        }
+        .public-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .public-nav {
+            display: flex;
+            gap: 24px;
+        }
+        .public-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color var(--transition-fast);
+        }
+        .public-nav a:hover,
+        .public-nav a.active {
+            color: var(--text-primary);
+        }
+        .redeem-container {
+            max-width: 480px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+        .redeem-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+        }
+        .redeem-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .redeem-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .redeem-form .form-group {
+            margin-bottom: 20px;
+        }
+        .redeem-form .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .redeem-form .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            box-sizing: border-box;
+        }
+        .redeem-form .form-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-primary-glow);
+        }
+        .redeem-form .form-input.code-input {
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 18px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        .captcha-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        .captcha-row .form-group {
+            flex: 1;
+        }
+        .captcha-question {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: center;
+            min-width: 140px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .captcha-question:hover {
+            background: var(--bg-elevated);
+        }
+        .redeem-submit {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        .redeem-toggle {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .redeem-toggle a {
+            font-size: 13px;
+            color: var(--accent-primary);
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .redeem-toggle a:hover {
+            text-decoration: underline;
+        }
+        .result-card {
+            display: none;
+            text-align: center;
+            padding: 24px 0;
+        }
+        .result-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            color: var(--accent-success);
+        }
+        .result-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .result-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        .result-key {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            color: var(--accent-primary);
+            margin-bottom: 16px;
+        }
+        .result-limits {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="public-page">
+        <script src="/js/public-header.js"></script>
+        <script>renderPublicHeader('redeem');</script>
+
+    <div class="redeem-container">
+        <div class="redeem-card">
+            <!-- 兑换表单 -->
+            <div id="redeem-form-section">
+                <h1 class="redeem-title">兑换码</h1>
+                <p class="redeem-subtitle">输入兑换码获取或充值 API Key</p>
+
+                <div class="redeem-form">
+                    <div class="form-group">
+                        <label class="form-label">兑换码</label>
+                        <input type="text" class="form-input code-input" id="redeem-code" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19">
+                    </div>
+
+                    <div class="form-group" id="existing-key-group" style="display: none;">
+                        <label class="form-label">已有 API Key（充值模式）</label>
+                        <input type="text" class="form-input" id="existing-key" placeholder="输入已有的 API Key 进行充值">
+                    </div>
+
+                    <div class="captcha-row">
+                        <div class="form-group" style="flex: 0 0 auto;">
+                            <label class="form-label">验证码</label>
+                            <div class="captcha-question" id="captcha-question" title="点击刷新">加载中...</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">答案</label>
+                            <input type="text" class="form-input" id="captcha-answer" placeholder="输入计算结果">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary redeem-submit" id="redeem-btn">兑换</button>
+
+                    <div class="redeem-toggle">
+                        <a id="toggle-mode">切换到充值模式（为已有 Key 充值）</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 兑换结果 -->
+            <div class="result-card" id="result-section">
+                <svg class="result-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                <h2 class="result-title" id="result-title">兑换成功</h2>
+                <p class="result-desc" id="result-desc"></p>
+                <div class="result-key" id="result-key" style="display: none;"></div>
+                <div class="result-limits" id="result-limits"></div>
+                <button class="btn btn-primary" id="copy-key-btn" style="display: none;">复制 API Key</button>
+                <button class="btn btn-secondary" id="redeem-another" style="margin-top: 12px;">继续兑换</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    </div><!-- /.public-page -->
+
+    <script>
+        let captchaId = '';
+        let isRechargeMode = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCaptcha();
+            setupEvents();
+        });
+
+        function setupEvents() {
+            document.getElementById('redeem-btn').addEventListener('click', doRedeem);
+            document.getElementById('captcha-question').addEventListener('click', loadCaptcha);
+            document.getElementById('toggle-mode').addEventListener('click', toggleMode);
+            document.getElementById('redeem-another').addEventListener('click', resetForm);
+            document.getElementById('copy-key-btn').addEventListener('click', copyKey);
+            document.getElementById('redeem-code').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') doRedeem();
+            });
+            document.getElementById('captcha-answer').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') doRedeem();
+            });
+        }
+
+        async function loadCaptcha() {
+            try {
+                const res = await fetch('/api/captcha');
+                const result = await res.json();
+                if (result.success) {
+                    captchaId = result.data.id;
+                    document.getElementById('captcha-question').textContent = result.data.question;
+                    document.getElementById('captcha-answer').value = '';
+                }
+            } catch (err) {
+                document.getElementById('captcha-question').textContent = '加载失败，点击重试';
+            }
+        }
+
+        function toggleMode() {
+            isRechargeMode = !isRechargeMode;
+            const group = document.getElementById('existing-key-group');
+            const link = document.getElementById('toggle-mode');
+            if (isRechargeMode) {
+                group.style.display = 'block';
+                link.textContent = '切换到新建模式（生成新 Key）';
+            } else {
+                group.style.display = 'none';
+                document.getElementById('existing-key').value = '';
+                link.textContent = '切换到充值模式（为已有 Key 充值）';
+            }
+        }
+
+        async function doRedeem() {
+            const code = document.getElementById('redeem-code').value.trim();
+            const answer = document.getElementById('captcha-answer').value.trim();
+            const existingApiKey = isRechargeMode ? document.getElementById('existing-key').value.trim() : '';
+
+            if (!code) return showToast('请输入兑换码', 'error');
+            if (!answer) return showToast('请输入验证码答案', 'error');
+            if (isRechargeMode && !existingApiKey) return showToast('请输入已有的 API Key', 'error');
+
+            const btn = document.getElementById('redeem-btn');
+            btn.disabled = true;
+            btn.textContent = '兑换中...';
+
+            try {
+                const res = await fetch('/api/redeem', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code: code,
+                        captchaId: captchaId,
+                        captchaAnswer: answer,
+                        existingApiKey: existingApiKey || undefined
+                    })
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    showResult(result.data);
+                } else {
+                    showToast(result.error || '兑换失败', 'error');
+                    loadCaptcha();
+                }
+            } catch (err) {
+                showToast('网络错误，请重试', 'error');
+                loadCaptcha();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '兑换';
+            }
+        }
+
+        function showResult(data) {
+            document.getElementById('redeem-form-section').style.display = 'none';
+            const section = document.getElementById('result-section');
+            section.style.display = 'block';
+
+            if (data.isRecharge) {
+                document.getElementById('result-title').textContent = '充值成功';
+                document.getElementById('result-desc').textContent = '已为您的 API Key 充值套餐: ' + data.packageName;
+                document.getElementById('result-key').style.display = 'none';
+                document.getElementById('copy-key-btn').style.display = 'none';
+            } else {
+                document.getElementById('result-title').textContent = '兑换成功';
+                document.getElementById('result-desc').textContent = '套餐: ' + data.packageName;
+                document.getElementById('result-key').textContent = data.apiKey;
+                document.getElementById('result-key').style.display = 'block';
+                document.getElementById('copy-key-btn').style.display = 'inline-block';
+            }
+
+            const limits = data.limits;
+            let limitsText = [];
+            if (limits.dailyLimit > 0) limitsText.push('日限 ' + limits.dailyLimit + ' 次');
+            if (limits.monthlyLimit > 0) limitsText.push('月限 ' + limits.monthlyLimit + ' 次');
+            if (limits.totalCostLimit > 0) limitsText.push('金额限制 $' + limits.totalCostLimit);
+            if (limits.expiresInDays > 0) limitsText.push('有效期 ' + limits.expiresInDays + ' 天');
+            document.getElementById('result-limits').textContent = limitsText.length > 0 ? limitsText.join(' | ') : '无限制';
+        }
+
+        function resetForm() {
+            document.getElementById('redeem-form-section').style.display = 'block';
+            document.getElementById('result-section').style.display = 'none';
+            document.getElementById('redeem-code').value = '';
+            document.getElementById('captcha-answer').value = '';
+            loadCaptcha();
+        }
+
+        function copyKey() {
+            const key = document.getElementById('result-key').textContent;
+            navigator.clipboard.writeText(key).then(() => {
+                showToast('API Key 已复制', 'success');
+            }).catch(() => {
+                showToast('复制失败', 'error');
+            });
+        }
+
+        function showToast(message, type) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

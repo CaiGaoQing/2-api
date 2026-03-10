@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使用排行 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 20V10M12 20V4M6 20v-6"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">使用排行</h1>
+                            <p class="page-subtitle">查看 API Key 使用排行榜</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="usage-filters">
+                    <div class="usage-filter-group">
+                        <label class="usage-filter-label">时间范围</label>
+                        <select class="form-select usage-filter-input" id="filter-hours">
+                            <option value="1">最近 1 小时</option>
+                            <option value="6">最近 6 小时</option>
+                            <option value="12">最近 12 小时</option>
+                            <option value="24" selected>最近 24 小时</option>
+                            <option value="48">最近 48 小时</option>
+                            <option value="72">最近 72 小时</option>
+                            <option value="168">最近 7 天</option>
+                        </select>
+                    </div>
+                    <div class="usage-filter-group">
+                        <label class="usage-filter-label">显示数量</label>
+                        <select class="form-select usage-filter-input" id="filter-limit">
+                            <option value="5" selected>前 5 名</option>
+                            <option value="10">前 10 名</option>
+                            <option value="20">前 20 名</option>
+                            <option value="50">前 50 名</option>
+                        </select>
+                    </div>
+                    <div class="usage-filter-group">
+                        <label class="usage-filter-label">排序方式</label>
+                        <select class="form-select usage-filter-input" id="filter-orderby">
+                            <option value="tokens" selected>按 Token 数</option>
+                            <option value="requests">按请求数</option>
+                            <option value="cost">按费用</option>
+                        </select>
+                    </div>
+                    <div class="usage-filter-actions">
+                        <button class="btn btn-primary btn-sm" id="refresh-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="1 4 1 10 7 10"/>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                            </svg>
+                            刷新
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 排行榜 -->
+                <div class="usage-section">
+                    <h3 class="usage-section-title">
+                        <span id="ranking-title">最近 24 小时使用排行</span>
+                    </h3>
+                    <div class="usage-table-wrapper">
+                        <table class="usage-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">排名</th>
+                                    <th>API Key</th>
+                                    <th>名称</th>
+                                    <th>请求数</th>
+                                    <th>输入 Tokens</th>
+                                    <th>输出 Tokens</th>
+                                    <th>总 Tokens</th>
+                                    <th>费用 (USD)</th>
+                                    <th>最后请求</th>
+                                    <th style="width: 80px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ranking-list"></tbody>
+                        </table>
+                    </div>
+                    <div id="ranking-empty" class="empty-state" style="display: none;">
+                        <p>暂无数据</p>
+                    </div>
+                </div>
+
+                <!-- 调用记录详情（在下方展示） -->
+                <div id="history-section" class="usage-section" style="display: none; margin-top: 24px;">
+                    <div class="usage-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 id="history-title" style="margin: 0;">调用记录详情</h3>
+                        <button class="btn btn-sm btn-secondary" id="close-history-btn">收起</button>
+                    </div>
+
+                    <!-- 图表区域 -->
+                    <div class="chart-section" style="margin: 16px 0 24px;">
+                        <h4 style="margin-bottom: 12px; color: var(--text-primary);">使用趋势</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="chart-container" style="background: var(--bg-secondary); border-radius: 8px; padding: 16px; height: 300px;">
+                                <canvas id="tokens-chart"></canvas>
+                            </div>
+                            <div class="chart-container" style="background: var(--bg-secondary); border-radius: 8px; padding: 16px; height: 300px;">
+                                <canvas id="requests-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 表格区域 -->
+                    <div style="margin-top: 40px;">
+                        <h4 style="margin-bottom: 12px; color: var(--text-primary);">调用记录</h4>
+                        <div class="usage-table-wrapper">
+                        <table class="usage-table">
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>模型</th>
+                                    <th>路径</th>
+                                    <th>输入</th>
+                                    <th>输出</th>
+                                    <th>状态</th>
+                                    <th>耗时</th>
+                                    <th>IP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-list"></tbody>
+                        </table>
+                    </div>
+                    <div id="history-pagination" class="pagination" style="margin-top: 16px;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/ranking.js"></script>
+</body>
+</html>

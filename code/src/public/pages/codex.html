@@ -1,0 +1,2532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex 账号管理 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .codex-gradient {
+            background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
+        }
+        .codex-icon {
+            background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
+        }
+        
+        /* 统计卡片 - 仿 accounts.html 风格 */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.2s ease;
+        }
+        .stat-card:hover {
+            border-color: #10a37f;
+            box-shadow: 0 4px 12px rgba(16, 163, 127, 0.1);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(16, 163, 127, 0.1) 0%, rgba(16, 163, 127, 0.05) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .stat-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: #10a37f;
+        }
+        .stat-icon.success { background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%); }
+        .stat-icon.success svg { stroke: #22c55e; }
+        .stat-icon.warning { background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%); }
+        .stat-icon.warning svg { stroke: #f59e0b; }
+        .stat-icon.danger { background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%); }
+        .stat-icon.danger svg { stroke: #ef4444; }
+        .stat-icon.info { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%); }
+        .stat-icon.info svg { stroke: #3b82f6; }
+        .stat-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* 内容头部 */
+        .content-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding: 0 4px;
+        }
+        .content-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .content-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .account-count {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .account-count strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* 卡片网格 */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
+        }
+        
+        /* 账号卡片 */
+        .account-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .account-card:hover {
+            border-color: #10a37f;
+            box-shadow: 0 4px 16px rgba(16, 163, 127, 0.12);
+        }
+        .account-card.selected {
+            border-color: #10a37f;
+            background: rgba(16, 163, 127, 0.02);
+        }
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .card-checkbox {
+            margin-top: 4px;
+        }
+        .card-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .card-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .card-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .plan-badge {
+            font-size: 10px;
+            font-weight: 500;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(16, 163, 127, 0.1);
+            color: #10a37f;
+            text-transform: uppercase;
+        }
+        .text-danger {
+            color: #ef4444 !important;
+        }
+        .text-warning {
+            color: #f59e0b !important;
+        }
+        .card-email {
+            font-size: 13px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .card-status {
+            flex-shrink: 0;
+        }
+        
+        /* 状态徽章 */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-badge.active {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+        .status-badge.inactive {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        .status-badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        
+        /* 卡片统计区域 */
+        .card-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 12px 0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 12px;
+        }
+        .card-stat {
+            text-align: center;
+        }
+        .card-stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .card-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        
+        /* 双窗口配额展示 - 参考 cockpit-tools */
+        .card-quota {
+            background: var(--bg-secondary, #f8f9fa);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+        }
+        .quota-item {
+            margin-bottom: 10px;
+        }
+        .quota-item:last-child {
+            margin-bottom: 0;
+        }
+        .quota-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .quota-header svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--text-secondary);
+            flex-shrink: 0;
+        }
+        .quota-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            flex: 1;
+        }
+        .quota-pct {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .quota-pct.low { color: #22c55e; }
+        .quota-pct.medium { color: #f59e0b; }
+        .quota-pct.high { color: #ef4444; }
+        .quota-pct.critical { color: #dc2626; }
+        .quota-bar-track {
+            height: 6px;
+            background: var(--border-color, #e5e7eb);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+        .quota-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .quota-bar.low { background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); }
+        .quota-bar.medium { background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); }
+        .quota-bar.high { background: linear-gradient(90deg, #ef4444 0%, #f87171 100%); }
+        .quota-bar.critical { background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%); }
+        .quota-reset {
+            font-size: 11px;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+        .quota-empty {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 12px;
+            padding: 8px 0;
+        }
+        .quota-error-inline {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #ef4444;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        .quota-error-inline svg {
+            width: 14px;
+            height: 14px;
+            stroke: #ef4444;
+            flex-shrink: 0;
+        }
+        .quota-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 6px;
+        }
+        .usage-refresh-btn {
+            background: none;
+            border: none;
+            color: #10a37f;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 6px;
+        }
+        .usage-refresh-btn:hover {
+            text-decoration: underline;
+        }
+        
+        /* 搜索筛选工具栏 */
+        .filter-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--input-bg, var(--card-bg));
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #10a37f;
+        }
+        .search-box .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-secondary);
+        }
+        .filter-select select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--input-bg, var(--card-bg));
+            color: var(--text-primary);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .filter-select select:focus {
+            outline: none;
+            border-color: #10a37f;
+        }
+        .sort-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--input-bg, var(--card-bg));
+            color: var(--text-primary);
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .sort-btn:hover {
+            border-color: #10a37f;
+        }
+
+        /* 卡片操作按钮 */
+        .card-actions .btn {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+        .card-actions .btn-icon-only {
+            flex: 0;
+            width: 36px;
+            padding: 8px;
+        }
+        .card-actions .btn-icon-only .btn-icon {
+            margin: 0;
+        }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal {
+            background: var(--card-bg);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow: auto;
+        }
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 4px;
+        }
+        .modal-body {
+            padding: 20px;
+        }
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #10a37f;
+        }
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            z-index: 2000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast.success { background: #22c55e; }
+        .toast.error { background: #ef4444; }
+        .toast.warning { background: #f59e0b; }
+        .btn-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+        .btn-info:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spinning {
+            animation: spin 1s linear infinite;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            opacity: 0.5;
+        }
+        .empty-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .empty-description {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        /* 用量相关样式 */
+        .usage-summary-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .usage-summary-card:hover {
+            border-color: #10a37f;
+        }
+        .usage-summary-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .usage-summary-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        .usage-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: var(--card-bg);
+            transition: all 0.2s ease;
+        }
+        .usage-item:hover {
+            border-color: #10a37f;
+            box-shadow: 0 2px 8px rgba(16, 163, 127, 0.1);
+        }
+        .usage-item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .usage-item-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .usage-item-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        .usage-item-plan {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        .usage-item-stats {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .usage-stat {
+            text-align: right;
+            min-width: 60px;
+        }
+        .usage-stat-value {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+        .usage-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        .usage-progress-bar {
+            width: 140px;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .usage-progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .usage-progress-fill.low {
+            background: linear-gradient(90deg, #10a37f 0%, #22c55e 100%);
+        }
+        .usage-progress-fill.medium {
+            background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+        }
+        .usage-progress-fill.high {
+            background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+        }
+        .usage-error {
+            color: #ef4444;
+            font-size: 12px;
+        }
+        
+        /* 模型管理区域 */
+        .models-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+        }
+        .models-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .models-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .models-title svg {
+            width: 18px;
+            height: 18px;
+            stroke: #10a37f;
+        }
+        .models-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .models-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .model-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary, #f8f9fa);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .model-tag:hover {
+            border-color: #10a37f;
+        }
+        .model-tag.disabled {
+            opacity: 0.5;
+            text-decoration: line-through;
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: var(--text-secondary);
+        }
+        .model-tag.testing {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.05);
+        }
+        .model-tag .model-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .model-tag .model-status-dot.active { background: #22c55e; }
+        .model-tag .model-status-dot.disabled { background: #ef4444; }
+        .model-tag .model-status-dot.testing { background: #f59e0b; animation: pulse 1s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .model-tag .model-remove-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            color: var(--text-secondary);
+        }
+        .model-tag .model-remove-btn:hover {
+            color: #ef4444;
+        }
+        .model-tag.disabled .model-remove-btn:hover {
+            color: #22c55e;
+        }
+        .models-summary {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .usage-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .usage-item-stats {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon codex-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">Codex 账号管理</h1>
+                            <p class="page-subtitle">管理您的 OpenAI Codex API 凭证 (GPT-5)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-success" id="register-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="8.5" cy="7" r="4"/>
+                            <line x1="20" y1="8" x2="20" y2="14"/>
+                            <line x1="23" y1="11" x2="17" y2="11"/>
+                        </svg>
+                        自动注册
+                    </button>
+                    <button class="btn btn-secondary" id="oauth-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                            <polyline points="10 17 15 12 10 7"/>
+                            <line x1="15" y1="12" x2="3" y2="12"/>
+                        </svg>
+                        OAuth 登录
+                    </button>
+                    <button class="btn btn-warning" id="batch-login-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        批量授权
+                    </button>
+                    <button class="btn btn-info" id="batch-refresh-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 4v6h-6"/>
+                            <path d="M1 20v-6h6"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                        批量刷新
+                    </button>
+                    <button class="btn btn-info" id="usage-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 4v6h-6"/>
+                            <path d="M1 20v-6h6"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                        刷新全部用量
+                    </button>
+                    <button class="btn btn-secondary" id="batch-import-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        批量导入
+                    </button>
+                    <button class="btn btn-primary" id="add-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加凭证
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- 统计卡片 -->
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="stat-total">0</div>
+                            <div class="stat-label">总账号数</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon success">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="stat-active">0</div>
+                            <div class="stat-label">活跃账号</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon danger">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="stat-error">0</div>
+                            <div class="stat-label">错误账号</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon info">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"/>
+                                <line x1="12" y1="20" x2="12" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="stat-usage">0</div>
+                            <div class="stat-label">总调用次数</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 模型管理 -->
+                <div class="models-section">
+                    <div class="models-header">
+                        <div class="models-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                            可用模型
+                            <span id="models-count-badge" style="font-size: 12px; font-weight: 400; color: var(--text-secondary);"></span>
+                        </div>
+                        <div class="models-actions">
+                            <button class="btn btn-secondary btn-sm" id="test-all-models-btn" onclick="testAllModels()">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                                </svg>
+                                测试全部
+                            </button>
+                            <button class="btn btn-secondary btn-sm" id="reset-models-btn" onclick="resetModels()">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"/>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                </svg>
+                                重置全部
+                            </button>
+                        </div>
+                    </div>
+                    <div class="models-grid" id="models-grid">
+                        <!-- 模型标签将在这里动态生成 -->
+                    </div>
+                    <div class="models-summary" id="models-summary"></div>
+                </div>
+
+                <!-- 内容头部 -->
+                <div class="content-header">
+                    <div class="content-header-left">
+                        <span class="account-count">共 <strong id="displayed-count">0</strong> 个凭证</span>
+                    </div>
+                    <div class="content-header-right">
+                        <button class="btn btn-secondary btn-sm" id="refresh-all-tokens-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                            刷新所有 Token
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 搜索筛选工具栏 -->
+                <div class="filter-toolbar">
+                    <div class="search-box">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" id="search-input" placeholder="搜索账号..." oninput="filterAndRender()">
+                    </div>
+                    <div class="filter-select">
+                        <select id="plan-filter" onchange="filterAndRender()">
+                            <option value="all">全部套餐</option>
+                            <option value="free">FREE</option>
+                            <option value="plus">PLUS</option>
+                            <option value="pro">PRO</option>
+                            <option value="team">TEAM</option>
+                            <option value="enterprise">ENTERPRISE</option>
+                        </select>
+                    </div>
+                    <div class="filter-select">
+                        <select id="status-filter" onchange="filterAndRender()">
+                            <option value="all">全部状态</option>
+                            <option value="normal">正常</option>
+                            <option value="disabled">禁用</option>
+                        </select>
+                    </div>
+                    <div class="filter-select">
+                        <select id="sort-select" onchange="filterAndRender()">
+                            <option value="created_at">按创建时间</option>
+                            <option value="primary">按6h配额</option>
+                            <option value="secondary">按7天配额</option>
+                            <option value="primary_reset">按6h重置时间</option>
+                            <option value="secondary_reset">按7天重置时间</option>
+                        </select>
+                    </div>
+                    <button class="sort-btn" id="sort-direction-btn" onclick="toggleSortDirection()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12l7 7 7-7"/>
+                        </svg>
+                        <span id="sort-direction-text">降序</span>
+                    </button>
+                </div>
+
+                <!-- 卡片网格 -->
+                <div class="cards-grid" id="credentials-grid">
+                    <!-- 凭证卡片将在这里动态生成 -->
+                </div>
+
+                <!-- 空状态 -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    <h3 class="empty-title">暂无 Codex 凭证</h3>
+                    <p class="empty-description">点击"添加凭证"或"OAuth 登录"开始添加您的第一个 Codex 账号</p>
+                    <button class="btn btn-primary" id="empty-add-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加凭证
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 添加/编辑凭证模态框 -->
+    <div class="modal-overlay" id="credential-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">添加凭证</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="credential-id">
+                <div class="form-group">
+                    <label class="form-label">名称 *</label>
+                    <input type="text" class="form-input" id="credential-name" placeholder="输入凭证名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Refresh Token *</label>
+                    <textarea class="form-textarea" id="credential-refresh-token" placeholder="输入 Refresh Token"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" class="form-input" id="credential-email" placeholder="输入邮箱（可选）">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">备注</label>
+                    <input type="text" class="form-input" id="credential-note" placeholder="输入备注（可选）">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveCredential()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自动注册模态框 -->
+    <div class="modal-overlay" id="register-modal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">自动注册 GPT 账号</h3>
+                <button class="modal-close" onclick="closeRegisterModal()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="register-form">
+                    <div class="form-group">
+                        <label class="form-label">注册数量</label>
+                        <input type="number" class="form-input" id="register-count" value="1" min="1" max="100">
+                        <small style="color: var(--text-secondary); font-size: 12px; margin-top: 4px; display: block;">
+                            每个账号注册约需 2-3 分钟，请耐心等待
+                        </small>
+                    </div>
+                    <div id="register-config" style="margin-top: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px; font-size: 13px;">
+                        <div style="color: var(--text-secondary); margin-bottom: 8px;">当前配置:</div>
+                        <div id="config-info">加载中...</div>
+                    </div>
+                </div>
+                <div id="register-progress" style="display: none;">
+                    <div style="text-align: center; padding: 20px 0;">
+                        <div id="progress-status" style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">注册中...</div>
+                        <div style="background: var(--border-color); border-radius: 8px; height: 8px; overflow: hidden; margin-bottom: 12px;">
+                            <div id="progress-bar" style="background: #10a37f; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                        </div>
+                        <div id="progress-text" style="color: var(--text-secondary); font-size: 14px;">0 / 0</div>
+                    </div>
+                    <div id="register-logs" style="max-height: 200px; overflow-y: auto; background: var(--bg-secondary); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; margin-top: 16px;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRegisterModal()" id="register-cancel-btn">取消</button>
+                <button class="btn btn-primary" onclick="startRegister()" id="register-start-btn">开始注册</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量授权模态框 -->
+    <div class="modal-overlay" id="batch-login-modal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">批量 OAuth 授权</h3>
+                <button class="modal-close" onclick="closeBatchLoginModal()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="batch-login-info">
+                    <div style="padding: 16px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 16px;">
+                        <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">
+                            从 <code>register/accounts.txt</code> 读取已注册的账号，自动进行 OAuth 授权获取 Token。
+                        </p>
+                    </div>
+                </div>
+                <div id="batch-login-progress" style="display: none;">
+                    <div style="text-align: center; padding: 20px 0;">
+                        <div id="batch-progress-status" style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">授权中...</div>
+                        <div style="background: var(--border-color); border-radius: 8px; height: 8px; overflow: hidden; margin-bottom: 12px;">
+                            <div id="batch-progress-bar" style="background: #f59e0b; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                        </div>
+                        <div id="batch-progress-text" style="color: var(--text-secondary); font-size: 14px;">0 / 0</div>
+                    </div>
+                    <div id="batch-login-logs" style="max-height: 200px; overflow-y: auto; background: var(--bg-secondary); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; margin-top: 16px;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeBatchLoginModal()" id="batch-login-cancel-btn">取消</button>
+                <button class="btn btn-warning" onclick="startBatchLogin()" id="batch-login-start-btn">开始授权</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用量查询模态框 -->
+    <div class="modal-overlay" id="usage-modal">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">账号用量统计</h3>
+                <button class="modal-close" onclick="closeUsageModal()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="usage-loading" style="text-align: center; padding: 40px;">
+                    <svg class="spinning" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6"/>
+                        <path d="M1 20v-6h6"/>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                    </svg>
+                    <div style="margin-top: 12px; color: var(--text-secondary);">正在获取用量数据...</div>
+                </div>
+                <div id="usage-content" style="display: none;">
+                    <div id="usage-summary" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+                    </div>
+                    <div id="usage-list" style="max-height: 400px; overflow-y: auto;">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeUsageModal()">关闭</button>
+                <button class="btn btn-info" id="refresh-all-usage-btn" onclick="refreshAllUsageAndShow()">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    刷新全部用量
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量导入模态框 -->
+    <div class="modal-overlay" id="batch-import-modal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">批量导入 Token</h3>
+                <button class="modal-close" onclick="closeBatchImportModal()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Refresh Token（每行一个）</label>
+                    <textarea class="form-textarea" id="batch-import-tokens" rows="12" placeholder="每行粘贴一个 Refresh Token&#10;rt_xxxxx...&#10;rt_yyyyy...&#10;rt_zzzzz..."
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 12px;"></textarea>
+                    <p style="margin-top: 8px; color: var(--text-secondary); font-size: 12px;">名称将自动生成为 token 前几位字符，去重后逐个导入。</p>
+                </div>
+                <div id="batch-import-progress" style="display: none; margin-top: 16px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+                        <span id="batch-import-status">导入中...</span>
+                        <span id="batch-import-count">0 / 0</span>
+                    </div>
+                    <div style="background: var(--border-color); border-radius: 8px; height: 8px; overflow: hidden;">
+                        <div id="batch-import-bar" style="background: var(--primary-color, #3b82f6); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                    </div>
+                    <div id="batch-import-logs" style="max-height: 150px; overflow-y: auto; background: var(--bg-secondary); border-radius: 8px; padding: 10px; font-family: monospace; font-size: 12px; margin-top: 12px;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeBatchImportModal()" id="batch-import-cancel-btn">取消</button>
+                <button class="btn btn-primary" onclick="startBatchImport()" id="batch-import-start-btn">开始导入</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <div id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script>
+        let credentials = [];
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 先加载站点设置
+            await loadSiteSettings();
+
+            // 注入侧边栏
+            document.getElementById('sidebar-container').innerHTML = getSidebarHTML();
+            initSidebar('codex');
+
+            // 更新页面标题
+            const settings = window.siteSettings;
+            document.title = `Codex 账号管理 - ${settings.siteName} ${settings.siteSubtitle}`;
+
+            if (!await checkAuth()) return;
+
+            loadCredentials();
+            loadStatistics();
+            loadModels();
+            updateSidebarStats();
+
+            document.getElementById('add-btn').addEventListener('click', () => openModal());
+            document.getElementById('oauth-btn').addEventListener('click', startOAuth);
+            document.getElementById('register-btn').addEventListener('click', openRegisterModal);
+            document.getElementById('batch-login-btn').addEventListener('click', openBatchLoginModal);
+            document.getElementById('batch-refresh-btn').addEventListener('click', batchRefreshTokens);
+            document.getElementById('batch-import-btn').addEventListener('click', openBatchImportModal);
+            document.getElementById('usage-btn').addEventListener('click', refreshAllUsageInline);
+            document.getElementById('refresh-all-tokens-btn').addEventListener('click', batchRefreshTokens);
+            document.getElementById('empty-add-btn')?.addEventListener('click', () => openModal());
+        });
+
+        // 加载凭证列表
+        async function loadCredentials() {
+            try {
+                const res = await fetch('/api/codex/credentials', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    credentials = data.data;
+                    renderCredentials();
+                }
+            } catch (error) {
+                showToast('加载凭证失败: ' + error.message, 'error');
+            }
+        }
+
+        // 加载统计信息
+        async function loadStatistics() {
+            try {
+                const res = await fetch('/api/codex/statistics', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('stat-total').textContent = data.data.total;
+                    document.getElementById('stat-active').textContent = data.data.active;
+                    document.getElementById('stat-error').textContent = data.data.error;
+                    document.getElementById('stat-usage').textContent = data.data.totalUseCount;
+                }
+            } catch (error) {
+                console.error('加载统计失败:', error);
+            }
+        }
+
+        // ============ 模型管理 ============
+        let modelsData = [];
+
+        async function loadModels() {
+            try {
+                const res = await fetch('/api/codex/models', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    modelsData = data.data;
+                    renderModels();
+                }
+            } catch (error) {
+                console.error('加载模型失败:', error);
+            }
+        }
+
+        function renderModels() {
+            const grid = document.getElementById('models-grid');
+            const summary = document.getElementById('models-summary');
+            const badge = document.getElementById('models-count-badge');
+            const activeCount = modelsData.filter(m => !m.disabled).length;
+            const disabledCount = modelsData.filter(m => m.disabled).length;
+
+            badge.textContent = `(${activeCount}/${modelsData.length})`;
+
+            grid.innerHTML = modelsData.map(m => {
+                const statusClass = m.disabled ? 'disabled' : 'active';
+                const tagClass = m.disabled ? 'disabled' : '';
+                const toggleIcon = m.disabled
+                    ? '<title>点击启用</title><polyline points="20 6 9 17 4 12"/>'
+                    : '<title>点击禁用</title><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+                return `
+                    <div class="model-tag ${tagClass}" id="model-tag-${m.id}">
+                        <span class="model-status-dot ${statusClass}"></span>
+                        <span>${m.id}</span>
+                        <button class="model-remove-btn" onclick="event.stopPropagation(); toggleModel('${m.id}', ${m.disabled})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${toggleIcon}</svg>
+                        </button>
+                    </div>`;
+            }).join('');
+
+            summary.textContent = disabledCount > 0
+                ? `${activeCount} 个活跃, ${disabledCount} 个已禁用`
+                : `全部 ${activeCount} 个模型可用`;
+        }
+
+        async function toggleModel(model, isCurrentlyDisabled) {
+            const action = isCurrentlyDisabled ? 'enable' : 'disable';
+            try {
+                const res = await fetch(`/api/codex/models/${action}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model })
+                });
+                const data = await res.json();
+                showToast(data.message, data.success ? 'success' : 'warning');
+                loadModels();
+            } catch (error) {
+                showToast('操作失败: ' + error.message, 'error');
+            }
+        }
+
+        async function testAllModels() {
+            const btn = document.getElementById('test-all-models-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="btn-icon spinning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 测试中...';
+
+            // 标记所有模型为 testing 状态
+            modelsData.forEach(m => {
+                const tag = document.getElementById('model-tag-' + m.id);
+                if (tag) {
+                    tag.classList.add('testing');
+                    const dot = tag.querySelector('.model-status-dot');
+                    if (dot) { dot.className = 'model-status-dot testing'; }
+                }
+            });
+
+            try {
+                const res = await fetch('/api/codex/models/test-all', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const r = data.data;
+                    showToast(`测试完成: ${r.success} 可用, ${r.failed} 不可用`, r.failed > 0 ? 'warning' : 'success');
+                } else {
+                    showToast(data.error || '测试失败', 'error');
+                }
+                loadModels();
+            } catch (error) {
+                showToast('测试失败: ' + error.message, 'error');
+                loadModels();
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> 测试全部';
+            }
+        }
+
+        async function resetModels() {
+            try {
+                const res = await fetch('/api/codex/models/reset', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                showToast(data.message, 'success');
+                loadModels();
+            } catch (error) {
+                showToast('重置失败: ' + error.message, 'error');
+            }
+        }
+
+        // 配额颜色等级
+        function getQuotaClass(pct) {
+            if (pct >= 90) return 'critical';
+            if (pct >= 70) return 'high';
+            if (pct >= 40) return 'medium';
+            return 'low';
+        }
+
+        // 格式化重置时间倒计时（Unix timestamp 秒）
+        function formatResetCountdown(timestamp) {
+            if (!timestamp) return '';
+            const now = Math.floor(Date.now() / 1000);
+            const diff = timestamp - now;
+            if (diff <= 0) return '已重置';
+            const days = Math.floor(diff / 86400);
+            const hours = Math.floor((diff % 86400) / 3600);
+            const minutes = Math.floor((diff % 3600) / 60);
+            let parts = [];
+            if (days > 0) parts.push(`${days}d`);
+            if (hours > 0) parts.push(`${hours}h`);
+            if (minutes > 0) parts.push(`${minutes}m`);
+            const relative = parts.length > 0 ? parts.join(' ') : '<1m';
+            const d = new Date(timestamp * 1000);
+            const abs = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            return `${relative} (${abs})`;
+        }
+
+        // 渲染单个配额窗口 HTML（显示剩余百分比）
+        function renderQuotaWindow(label, icon, usedPct, resetTimestamp) {
+            const hasPct = usedPct !== null && usedPct !== undefined && !isNaN(usedPct);
+            const remainPct = hasPct ? Math.max(0, 100 - usedPct) : null;
+            const cls = hasPct ? getQuotaClassRemain(remainPct) : '';
+            const resetText = resetTimestamp ? formatResetCountdown(resetTimestamp) : '';
+            return `
+                <div class="quota-item">
+                    <div class="quota-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icon}</svg>
+                        <span class="quota-label">${label}</span>
+                        <span class="quota-pct ${cls}">${hasPct ? '剩余 ' + remainPct.toFixed(1) + '%' : '--'}</span>
+                    </div>
+                    <div class="quota-bar-track">
+                        <div class="quota-bar ${cls}" style="width: ${hasPct ? Math.min(remainPct, 100) : 0}%;"></div>
+                    </div>
+                    ${resetText ? `<span class="quota-reset">重置: ${resetText}</span>` : ''}
+                </div>`;
+        }
+
+        // 配额颜色等级（基于剩余百分比，剩余越少越危险）
+        function getQuotaClassRemain(remainPct) {
+            if (remainPct <= 10) return 'critical';
+            if (remainPct <= 30) return 'high';
+            if (remainPct <= 60) return 'medium';
+            return 'low';
+        }
+
+        // 排序方向
+        let sortDirection = 'desc';
+
+        function toggleSortDirection() {
+            sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+            document.getElementById('sort-direction-text').textContent = sortDirection === 'desc' ? '降序' : '升序';
+            filterAndRender();
+        }
+
+        // 筛选 + 排序 + 渲染
+        function filterAndRender() {
+            const query = (document.getElementById('search-input').value || '').toLowerCase().trim();
+            const planFilter = document.getElementById('plan-filter').value;
+            const statusFilter = document.getElementById('status-filter').value;
+            const sortBy = document.getElementById('sort-select').value;
+
+            let filtered = credentials.filter(c => {
+                // 搜索
+                if (query) {
+                    const haystack = ((c.email || '') + ' ' + (c.name || '') + ' ' + (c.note || '')).toLowerCase();
+                    if (!haystack.includes(query)) return false;
+                }
+                // 套餐筛选
+                if (planFilter !== 'all') {
+                    const plan = (c.planType || '').toLowerCase();
+                    if (plan !== planFilter) return false;
+                }
+                // 状态筛选
+                if (statusFilter !== 'all') {
+                    const isDisabled = c.errorCount > 0 || c.status === 'disabled';
+                    if (statusFilter === 'normal' && isDisabled) return false;
+                    if (statusFilter === 'disabled' && !isDisabled) return false;
+                }
+                return true;
+            });
+
+            // 排序
+            filtered.sort((a, b) => {
+                let aVal, bVal;
+                switch (sortBy) {
+                    case 'primary':
+                        aVal = a.primaryUsagePercent ?? -1;
+                        bVal = b.primaryUsagePercent ?? -1;
+                        break;
+                    case 'secondary':
+                        aVal = a.secondaryUsagePercent ?? -1;
+                        bVal = b.secondaryUsagePercent ?? -1;
+                        break;
+                    case 'primary_reset':
+                        aVal = a.primaryResetAt ?? 0;
+                        bVal = b.primaryResetAt ?? 0;
+                        break;
+                    case 'secondary_reset':
+                        aVal = a.secondaryResetAt ?? 0;
+                        bVal = b.secondaryResetAt ?? 0;
+                        break;
+                    default: // created_at
+                        aVal = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                        bVal = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                        break;
+                }
+                const diff = bVal - aVal;
+                return sortDirection === 'desc' ? diff : -diff;
+            });
+
+            renderFilteredCredentials(filtered);
+        }
+
+        // 渲染凭证卡片（接受已筛选排序的数组）
+        function renderFilteredCredentials(list) {
+            const grid = document.getElementById('credentials-grid');
+            const emptyState = document.getElementById('empty-state');
+            const displayedCount = document.getElementById('displayed-count');
+            
+            displayedCount.textContent = list.length;
+            
+            if (credentials.length === 0) {
+                grid.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            grid.style.display = 'grid';
+            emptyState.style.display = 'none';
+
+            if (list.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);">没有匹配的账号，请调整搜索或筛选条件</div>';
+                return;
+            }
+
+            const clockIcon = '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
+            const calendarIcon = '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>';
+
+            grid.innerHTML = list.map(c => {
+                const isDisabled = c.errorCount > 0 || c.status === 'disabled';
+                const statusClass = isDisabled ? 'inactive' : 'active';
+                const statusText = isDisabled ? '禁用' : '正常';
+                const avatar = (c.name || c.email || 'C')[0].toUpperCase();
+                const expiresText = c.expiresAt ? formatExpiresIn(c.expiresAt) : '未知';
+                const planType = c.planType || '';
+
+                // 只显示有数据的配额窗口
+                const hasPrimary = c.primaryUsagePercent !== null && c.primaryUsagePercent !== undefined;
+                const hasSecondary = c.secondaryUsagePercent !== null && c.secondaryUsagePercent !== undefined;
+                let quotaHtml = '';
+                if (hasPrimary) {
+                    quotaHtml += renderQuotaWindow('6h', clockIcon, c.primaryUsagePercent, c.primaryResetAt);
+                }
+                if (hasSecondary) {
+                    quotaHtml += renderQuotaWindow('7天', calendarIcon, c.secondaryUsagePercent, c.secondaryResetAt);
+                }
+                if (!hasPrimary && !hasSecondary) {
+                    quotaHtml = '<div class="quota-empty">暂无配额数据，点击刷新获取</div>';
+                }
+
+                // 配额异常
+                const quotaError = c.quotaError || '';
+                const errorHtml = quotaError ? `<div class="quota-error-inline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${escapeHtml(quotaError)}</span></div>` : '';
+                
+                return `
+                <div class="account-card" data-id="${c.id}">
+                    <div class="card-header">
+                        <div class="card-avatar">${avatar}</div>
+                        <div class="card-info">
+                            <div class="card-name">
+                                ${escapeHtml(c.name || 'Codex Account')}
+                                ${planType && planType.toLowerCase() !== 'free' ? `<span class="plan-badge">${escapeHtml(planType)}</span>` : ''}
+                            </div>
+                            <div class="card-email">${escapeHtml(c.email || 'ID: ' + c.id)}</div>
+                        </div>
+                        <div class="card-status">
+                            <span class="status-badge ${statusClass}">
+                                <span class="status-dot"></span>
+                                ${statusText}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-quota">
+                        ${errorHtml}
+                        ${quotaHtml}
+                        <div class="quota-actions">
+                            <button class="usage-refresh-btn" onclick="event.stopPropagation(); refreshUsage(${c.id})">刷新配额</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-stats">
+                        <div class="card-stat">
+                            <div class="card-stat-value">${c.useCount || 0}</div>
+                            <div class="card-stat-label">调用次数</div>
+                        </div>
+                        <div class="card-stat">
+                            <div class="card-stat-value" style="${c.errorCount > 0 ? 'color: #ef4444;' : ''}">${c.errorCount || 0}</div>
+                            <div class="card-stat-label">错误次数</div>
+                        </div>
+                        <div class="card-stat">
+                            <div class="card-stat-value">${expiresText}</div>
+                            <div class="card-stat-label">Token 过期</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-actions">
+                        <button class="btn btn-secondary" onclick="refreshToken(${c.id})" title="刷新 Token">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                            刷新Token
+                        </button>
+                        <button class="btn btn-secondary" onclick="testCredential(${c.id})" title="测试连接">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                            </svg>
+                            测试
+                        </button>
+                        <button class="btn btn-secondary btn-icon-only" onclick="editCredential(${c.id})" title="编辑">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
+                        <button class="btn btn-danger btn-icon-only" onclick="deleteCredential(${c.id})" title="删除">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // 兼容旧调用
+        function renderCredentials() {
+            filterAndRender();
+        }
+        
+        // 格式化过期时间
+        function formatExpiresIn(expiresAt) {
+            const now = new Date();
+            const expires = new Date(expiresAt);
+            const diffMs = expires.getTime() - now.getTime();
+            
+            if (diffMs <= 0) return '已过期';
+            
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 0) return `${diffDays}天`;
+            if (diffHours > 0) return `${diffHours}小时`;
+            return `${diffMinutes}分钟`;
+        }
+
+        // 格式化重置时间
+        function formatResetTime(resetAt) {
+            if (!resetAt) return '';
+            const now = new Date();
+            const reset = new Date(resetAt);
+            const diffMs = reset.getTime() - now.getTime();
+            
+            if (diffMs <= 0) return '已重置';
+            
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 0) return `${diffDays}天后`;
+            if (diffHours > 0) return `${diffHours}小时后`;
+            return `${diffMinutes}分钟后`;
+        }
+
+        // 刷新单个凭证的用量
+        async function refreshUsage(id) {
+            try {
+                showToast('正在刷新用量...', 'success');
+                const res = await fetch(`/api/codex/credentials/${id}/refresh-usage`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const percent = data.usage?.summary?.usedPercent;
+                    showToast(`用量刷新成功: ${percent != null ? percent.toFixed(1) : 0}%`, 'success');
+                    loadCredentials();
+                } else {
+                    showToast(data.error || '刷新用量失败', 'error');
+                }
+            } catch (error) {
+                showToast('刷新用量失败: ' + error.message, 'error');
+            }
+        }
+
+        // 刷新全部用量（直接在列表中展示结果）
+        async function refreshAllUsageInline() {
+            const btn = document.getElementById('usage-btn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="btn-icon spinning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 刷新中...`;
+
+            try {
+                const res = await fetch('/api/codex/usage/refresh', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const result = data.data;
+                    showToast(`用量刷新完成: 成功 ${result.success}, 失败 ${result.failed}`, result.failed > 0 ? 'warning' : 'success');
+                    loadCredentials();
+                    loadStatistics();
+                } else {
+                    showToast(data.error || '刷新全部用量失败', 'error');
+                }
+            } catch (error) {
+                showToast('刷新全部用量失败: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // 打开模态框
+        function openModal(id = null) {
+            const modal = document.getElementById('credential-modal');
+            document.getElementById('modal-title').textContent = id ? '编辑凭证' : '添加凭证';
+            document.getElementById('credential-id').value = id || '';
+
+            if (id) {
+                const c = credentials.find(x => x.id === id);
+                if (c) {
+                    document.getElementById('credential-name').value = c.name || '';
+                    document.getElementById('credential-email').value = c.email || '';
+                    document.getElementById('credential-note').value = c.note || '';
+                    document.getElementById('credential-refresh-token').value = '';
+                }
+            } else {
+                document.getElementById('credential-name').value = '';
+                document.getElementById('credential-email').value = '';
+                document.getElementById('credential-note').value = '';
+                document.getElementById('credential-refresh-token').value = '';
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('credential-modal').classList.remove('active');
+        }
+
+        // 保存凭证
+        async function saveCredential() {
+            const id = document.getElementById('credential-id').value;
+            const name = document.getElementById('credential-name').value.trim();
+            const refreshToken = document.getElementById('credential-refresh-token').value.trim();
+            const email = document.getElementById('credential-email').value.trim();
+            const note = document.getElementById('credential-note').value.trim();
+
+            if (!name) {
+                showToast('请输入名称', 'error');
+                return;
+            }
+
+            if (!id && !refreshToken) {
+                showToast('请输入 Refresh Token', 'error');
+                return;
+            }
+
+            try {
+                const url = id ? `/api/codex/credentials/${id}` : '/api/codex/credentials';
+                const method = id ? 'PUT' : 'POST';
+                const body = { name, email, note };
+                if (refreshToken) body.refreshToken = refreshToken;
+
+                const res = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message || '保存成功', 'success');
+                    closeModal();
+                    loadCredentials();
+                    loadStatistics();
+                } else {
+                    showToast(data.error || '保存失败', 'error');
+                }
+            } catch (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        // 编辑凭证
+        function editCredential(id) {
+            openModal(id);
+        }
+
+        // 删除凭证
+        async function deleteCredential(id) {
+            if (!confirm('确定要删除此凭证吗？')) return;
+
+            try {
+                const res = await fetch(`/api/codex/credentials/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('删除成功', 'success');
+                    loadCredentials();
+                    loadStatistics();
+                } else {
+                    showToast(data.error || '删除失败', 'error');
+                }
+            } catch (error) {
+                showToast('删除失败: ' + error.message, 'error');
+            }
+        }
+
+        // 刷新 Token
+        async function refreshToken(id) {
+            try {
+                showToast('正在刷新 Token...', 'success');
+                const res = await fetch(`/api/codex/credentials/${id}/refresh`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Token 刷新成功', 'success');
+                    loadCredentials();
+                } else {
+                    showToast(data.error || '刷新失败', 'error');
+                }
+            } catch (error) {
+                showToast('刷新失败: ' + error.message, 'error');
+            }
+        }
+
+        // 批量刷新所有 Token
+        async function batchRefreshTokens() {
+            if (!confirm(`确定要批量刷新所有 ${credentials.length} 个凭证的 Token 吗？`)) return;
+
+            const btn = document.getElementById('batch-refresh-btn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="btn-icon spinning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 刷新中...`;
+
+            try {
+                const res = await fetch('/api/codex/credentials/batch-refresh', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const result = data.data;
+                    showToast(`批量刷新完成: 成功 ${result.success}, 失败 ${result.failed}`, result.failed > 0 ? 'warning' : 'success');
+                    loadCredentials();
+                    loadStatistics();
+                } else {
+                    showToast(data.error || '批量刷新失败', 'error');
+                }
+            } catch (error) {
+                showToast('批量刷新失败: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // 测试凭证
+        async function testCredential(id) {
+            try {
+                showToast('正在测试凭证...', 'success');
+                const res = await fetch(`/api/codex/credentials/${id}/test`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                showToast(data.message || (data.success ? '凭证有效' : '凭证无效'), data.success ? 'success' : 'error');
+            } catch (error) {
+                showToast('测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 启动 OAuth
+        async function startOAuth() {
+            try {
+                showToast('正在启动 OAuth...', 'success');
+                const res = await fetch('/api/codex/oauth/start', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success && data.authUrl) {
+                    window.open(data.authUrl, '_blank');
+                    showToast('请在新窗口中完成登录', 'success');
+                } else {
+                    showToast(data.error || 'OAuth 启动失败', 'error');
+                }
+            } catch (error) {
+                showToast('OAuth 启动失败: ' + error.message, 'error');
+            }
+        }
+
+        // ============ 自动注册功能 ============
+        let currentTaskId = null;
+        let pollInterval = null;
+
+        async function openRegisterModal() {
+            document.getElementById('register-modal').classList.add('active');
+            document.getElementById('register-form').style.display = 'block';
+            document.getElementById('register-progress').style.display = 'none';
+            document.getElementById('register-start-btn').disabled = false;
+            document.getElementById('register-start-btn').textContent = '开始注册';
+            document.getElementById('register-cancel-btn').textContent = '取消';
+
+            try {
+                const res = await fetch('/api/codex/register/config', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const cfg = data.data;
+                    document.getElementById('config-info').innerHTML = `
+                        <div>邮箱后缀: <strong>${cfg.email.suffix}</strong></div>
+                        <div>邮箱服务: <strong>${cfg.email.hasToken ? '已配置 ✓' : '未配置 ✗'}</strong></div>
+                        <div>无头模式: <strong>${cfg.browser.headless ? '是' : '否'}</strong></div>
+                    `;
+                } else {
+                    document.getElementById('config-info').innerHTML = '<span style="color: #ef4444;">加载配置失败</span>';
+                }
+            } catch (e) {
+                document.getElementById('config-info').innerHTML = '<span style="color: #ef4444;">加载配置失败</span>';
+            }
+        }
+
+        function closeRegisterModal() {
+            document.getElementById('register-modal').classList.remove('active');
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
+
+        async function startRegister() {
+            const count = parseInt(document.getElementById('register-count').value) || 1;
+            if (count < 1 || count > 100) {
+                showToast('注册数量必须在 1-100 之间', 'error');
+                return;
+            }
+
+            try {
+                document.getElementById('register-start-btn').disabled = true;
+                document.getElementById('register-start-btn').textContent = '启动中...';
+
+                const res = await fetch('/api/codex/register/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ count })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    currentTaskId = data.data.taskId;
+                    showToast('注册任务已启动', 'success');
+
+                    document.getElementById('register-form').style.display = 'none';
+                    document.getElementById('register-progress').style.display = 'block';
+                    document.getElementById('register-logs').innerHTML = '';
+                    document.getElementById('register-start-btn').textContent = '注册中...';
+
+                    pollTaskStatus();
+                    pollInterval = setInterval(pollTaskStatus, 2000);
+                } else {
+                    showToast(data.error || '启动失败', 'error');
+                    document.getElementById('register-start-btn').disabled = false;
+                    document.getElementById('register-start-btn').textContent = '开始注册';
+                }
+            } catch (error) {
+                showToast('启动失败: ' + error.message, 'error');
+                document.getElementById('register-start-btn').disabled = false;
+                document.getElementById('register-start-btn').textContent = '开始注册';
+            }
+        }
+
+        async function pollTaskStatus() {
+            if (!currentTaskId) return;
+
+            try {
+                const res = await fetch(`/api/codex/register/tasks/${currentTaskId}`, {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    const task = data.data;
+                    const percent = task.count > 0 ? (task.progress / task.count * 100) : 0;
+                    document.getElementById('progress-bar').style.width = percent + '%';
+                    document.getElementById('progress-text').textContent = `${task.progress} / ${task.count} (成功: ${task.success}, 失败: ${task.failed})`;
+
+                    const statusMap = { 'running': '注册中...', 'completed': '注册完成!', 'error': '注册出错', 'cancelled': '已取消' };
+                    document.getElementById('progress-status').textContent = statusMap[task.status] || task.status;
+
+                    const logsDiv = document.getElementById('register-logs');
+                    logsDiv.innerHTML = task.logs.slice(-20).map(l =>
+                        `<div style="color: ${l.level === 'ERROR' ? '#ef4444' : l.level === 'WARN' ? '#f59e0b' : 'var(--text-secondary)'}; margin-bottom: 4px;">[${l.timestamp.split('T')[1].split('.')[0]}] ${escapeHtml(l.message)}</div>`
+                    ).join('');
+                    logsDiv.scrollTop = logsDiv.scrollHeight;
+
+                    if (task.status !== 'running') {
+                        clearInterval(pollInterval);
+                        pollInterval = null;
+                        document.getElementById('register-start-btn').disabled = false;
+                        document.getElementById('register-start-btn').textContent = '完成';
+                        document.getElementById('register-cancel-btn').textContent = '关闭';
+                        loadCredentials();
+                        loadStatistics();
+                        if (task.status === 'completed') {
+                            showToast(`注册完成! 成功: ${task.success}, 失败: ${task.failed}`, 'success');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('轮询状态失败:', error);
+            }
+        }
+
+        // ============ 批量授权功能 ============
+
+        let batchLoginTaskId = null;
+        let batchPollInterval = null;
+
+        function openBatchLoginModal() {
+            document.getElementById('batch-login-modal').classList.add('active');
+            document.getElementById('batch-login-info').style.display = 'block';
+            document.getElementById('batch-login-progress').style.display = 'none';
+            document.getElementById('batch-login-start-btn').disabled = false;
+            document.getElementById('batch-login-start-btn').textContent = '开始授权';
+            document.getElementById('batch-login-cancel-btn').textContent = '取消';
+        }
+
+        function closeBatchLoginModal() {
+            document.getElementById('batch-login-modal').classList.remove('active');
+            if (batchPollInterval) {
+                clearInterval(batchPollInterval);
+                batchPollInterval = null;
+            }
+        }
+
+        async function startBatchLogin() {
+            try {
+                document.getElementById('batch-login-start-btn').disabled = true;
+                document.getElementById('batch-login-start-btn').textContent = '启动中...';
+
+                const res = await fetch('/api/codex/login/start', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + authToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    batchLoginTaskId = data.data.taskId;
+                    document.getElementById('batch-login-info').style.display = 'none';
+                    document.getElementById('batch-login-progress').style.display = 'block';
+                    document.getElementById('batch-login-start-btn').textContent = '授权中...';
+                    startBatchPollStatus();
+                } else {
+                    showToast('启动失败: ' + data.error, 'error');
+                    document.getElementById('batch-login-start-btn').disabled = false;
+                    document.getElementById('batch-login-start-btn').textContent = '开始授权';
+                }
+            } catch (error) {
+                showToast('启动失败: ' + error.message, 'error');
+                document.getElementById('batch-login-start-btn').disabled = false;
+                document.getElementById('batch-login-start-btn').textContent = '开始授权';
+            }
+        }
+
+        function startBatchPollStatus() {
+            batchPollInterval = setInterval(pollBatchLoginStatus, 2000);
+            pollBatchLoginStatus();
+        }
+
+        async function pollBatchLoginStatus() {
+            if (!batchLoginTaskId) return;
+
+            try {
+                const res = await fetch(`/api/codex/login/tasks/${batchLoginTaskId}`, {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const task = data.data;
+
+                    // 更新进度
+                    const progress = task.total > 0 ? (task.progress / task.total * 100) : 0;
+                    document.getElementById('batch-progress-bar').style.width = progress + '%';
+                    document.getElementById('batch-progress-text').textContent = `${task.progress} / ${task.total} (成功: ${task.success}, 失败: ${task.failed})`;
+                    document.getElementById('batch-progress-status').textContent = 
+                        task.status === 'running' ? '授权中...' : 
+                        task.status === 'completed' ? '完成!' : '失败';
+
+                    // 更新日志
+                    const logsDiv = document.getElementById('batch-login-logs');
+                    logsDiv.innerHTML = task.logs.map(log => `<div>${escapeHtml(log)}</div>`).join('');
+                    logsDiv.scrollTop = logsDiv.scrollHeight;
+
+                    if (task.status !== 'running') {
+                        clearInterval(batchPollInterval);
+                        batchPollInterval = null;
+                        document.getElementById('batch-login-start-btn').disabled = false;
+                        document.getElementById('batch-login-start-btn').textContent = '完成';
+                        document.getElementById('batch-login-cancel-btn').textContent = '关闭';
+                        loadCredentials();
+                        loadStatistics();
+                        if (task.status === 'completed') {
+                            showToast(`批量授权完成! 成功: ${task.success}, 失败: ${task.failed}`, 'success');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('轮询状态失败:', error);
+            }
+        }
+
+        // 工具函数
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // 本地 toast 函数（覆盖 common.js 中的版本）
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.textContent = message;
+                toast.className = `toast ${type} show`;
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+        }
+
+        // ============ 用量查询功能 ============
+        
+        let usageData = null;
+
+        function openUsageModal() {
+            document.getElementById('usage-modal').classList.add('active');
+            document.getElementById('usage-loading').style.display = 'block';
+            document.getElementById('usage-content').style.display = 'none';
+            fetchUsageData();
+        }
+
+        function closeUsageModal() {
+            document.getElementById('usage-modal').classList.remove('active');
+        }
+
+        function refreshUsageModal() {
+            document.getElementById('usage-loading').style.display = 'block';
+            document.getElementById('usage-content').style.display = 'none';
+            fetchUsageData();
+        }
+
+        async function fetchUsageData() {
+            try {
+                const res = await fetch('/api/codex/usage', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    usageData = data.data;
+                    renderUsageDataFromDb();
+                } else {
+                    showToast('获取用量失败: ' + (data.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showToast('获取用量失败: ' + error.message, 'error');
+            } finally {
+                document.getElementById('usage-loading').style.display = 'none';
+                document.getElementById('usage-content').style.display = 'block';
+            }
+        }
+
+        // 刷新全部用量并显示
+        async function refreshAllUsageAndShow() {
+            const btn = document.getElementById('refresh-all-usage-btn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="btn-icon spinning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 刷新中...`;
+
+            try {
+                const res = await fetch('/api/codex/usage/refresh', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    // 使用刷新后的实时数据显示
+                    usageData = data.data;
+                    renderUsageDataLive();
+                    showToast(`刷新完成: 成功 ${data.data.success}, 失败 ${data.data.failed}`, data.data.failed > 0 ? 'warning' : 'success');
+                    loadCredentials(); // 同时更新列表
+                } else {
+                    showToast('刷新用量失败: ' + (data.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showToast('刷新用量失败: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // 从数据库缓存渲染用量数据
+        function renderUsageDataFromDb() {
+            if (!usageData) return;
+
+            const usages = usageData.usages || [];
+            const totalAccounts = usageData.total || usages.length;
+            const hasUsageCount = usages.filter(u => u.usagePercent !== null).length;
+            
+            let avgUsage = 0;
+            let lowUsageCount = 0;
+
+            const validUsages = usages.filter(u => u.usagePercent !== null && u.usagePercent !== undefined);
+            if (validUsages.length > 0) {
+                const totalUsagePercent = validUsages.reduce((sum, u) => sum + parseFloat(u.usagePercent), 0);
+                avgUsage = Math.round(totalUsagePercent / validUsages.length);
+                lowUsageCount = validUsages.filter(u => parseFloat(u.usagePercent) < 50).length;
+            }
+
+            // 渲染汇总
+            document.getElementById('usage-summary').innerHTML = `
+                <div class="usage-summary-card">
+                    <div class="usage-summary-value">${totalAccounts}</div>
+                    <div class="usage-summary-label">总账号数</div>
+                </div>
+                <div class="usage-summary-card">
+                    <div class="usage-summary-value" style="color: #22c55e;">${hasUsageCount}</div>
+                    <div class="usage-summary-label">有用量数据</div>
+                </div>
+                <div class="usage-summary-card">
+                    <div class="usage-summary-value" style="color: #3b82f6;">${avgUsage}%</div>
+                    <div class="usage-summary-label">平均使用率</div>
+                </div>
+                <div class="usage-summary-card">
+                    <div class="usage-summary-value" style="color: #10a37f;">${lowUsageCount}</div>
+                    <div class="usage-summary-label">低使用率账号</div>
+                </div>
+            `;
+
+            // 渲染用量列表（双窗口配额）
+            const clockIcon = '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
+            const calendarIcon = '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>';
+
+            const listHtml = usages.map(item => {
+                const planType = item.planType || '';
+                const updatedAt = item.usageUpdatedAt ? formatDateTime(item.usageUpdatedAt) : '从未更新';
+                const hasPrimary = item.primaryUsagePercent !== null && item.primaryUsagePercent !== undefined;
+                const hasSecondary = item.secondaryUsagePercent !== null && item.secondaryUsagePercent !== undefined;
+
+                let quotaHtml = '';
+                if (hasPrimary || hasSecondary) {
+                    if (hasPrimary) quotaHtml += renderQuotaWindow('6h', clockIcon, item.primaryUsagePercent, item.primaryResetAt);
+                    if (hasSecondary) quotaHtml += renderQuotaWindow('7天', calendarIcon, item.secondaryUsagePercent, item.secondaryResetAt);
+                } else {
+                    const usedPercent = (item.usagePercent !== null && item.usagePercent !== undefined) ? parseFloat(item.usagePercent) : null;
+                    if (usedPercent !== null && !isNaN(usedPercent)) {
+                        quotaHtml = renderQuotaWindow('配额', clockIcon, usedPercent, null);
+                    } else {
+                        quotaHtml = '<div class="quota-empty">暂无配额数据</div>';
+                    }
+                }
+
+                const errorHtml = item.quotaError ? `<div class="quota-error-inline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${escapeHtml(item.quotaError)}</span></div>` : '';
+
+                return `
+                    <div class="usage-item" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                        <div class="usage-item-info">
+                            <div class="usage-item-avatar">${(item.email || '?')[0].toUpperCase()}</div>
+                            <div>
+                                <div class="usage-item-name">${escapeHtml(item.email || 'ID: ' + item.id)}</div>
+                                <div class="usage-item-plan">${planType ? escapeHtml(planType) : '未知套餐'} · 更新于 ${updatedAt}</div>
+                            </div>
+                        </div>
+                        <div style="padding: 0 4px;">
+                            ${errorHtml}
+                            ${quotaHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('usage-list').innerHTML = listHtml || '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">暂无用量数据，点击"刷新全部用量"获取</div>';
+        }
+
+        // 从实时 API 响应渲染用量数据
+        function renderUsageDataLive() {
+            if (!usageData) return;
+
+            const usages = usageData.usages || [];
+            const totalAccounts = usageData.total || usages.length;
+            const successCount = usageData.success || 0;
+            
+            let avgUsage = 0;
+            let lowUsageCount = 0;
+
+            const validUsages = usages.filter(u => u.success && u.usage);
+            if (validUsages.length > 0) {
+                const totalUsagePercent = validUsages.reduce((sum, u) => sum + (u.usage.summary?.usedPercent || 0), 0);
+                avgUsage = Math.round(totalUsagePercent / validUsages.length);
+                lowUsageCount = validUsages.filter(u => (u.usage.summary?.usedPercent || 0) < 50).length;
+            }
+
+            // 渲染汇总
+            document.getElementById('usage-summary').innerHTML = `
+                <div class="usage-summary-card">
+                    <div class="usage-summary-value">${totalAccounts}</div>
+                    <div class="usage-summary-label">总账号数</div>
+                </div>
+                <div class="usage-summary-card">
+                    <div class="usage-summary-value" style="color: #22c55e;">${successCount}</div>
+                    <div class="usage-summary-label">成功获取</div>
+                </div>
+                <div class="usage-summary-card">
+                    <div class="usage-summary-value" style="color: #3b82f6;">${avgUsage}%</div>
+                    <div class="usage-summary-label">平均使用率</div>
+                </div>
+                <div class="usage-summary-card">
+                    <div class="usage-summary-value" style="color: #10a37f;">${lowUsageCount}</div>
+                    <div class="usage-summary-label">低使用率账号</div>
+                </div>
+            `;
+
+            // 渲染用量列表（双窗口配额）
+            const clockIcon = '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
+            const calendarIcon = '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>';
+
+            const listHtml = usages.map(item => {
+                if (!item.success) {
+                    return `
+                        <div class="usage-item">
+                            <div class="usage-item-info">
+                                <div class="usage-item-avatar">${(item.email || '?')[0].toUpperCase()}</div>
+                                <div>
+                                    <div class="usage-item-name">${escapeHtml(item.email || 'ID: ' + item.id)}</div>
+                                    <div class="usage-error">${escapeHtml(item.error)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const usage = item.usage;
+                const planType = usage.planType || 'unknown';
+                const pw = usage.primaryWindow;
+                const sw = usage.secondaryWindow;
+                const hasPw = pw && pw.usedPercent !== null && pw.usedPercent !== undefined;
+                const hasSw = sw && sw.usedPercent !== null && sw.usedPercent !== undefined;
+
+                let quotaHtml = '';
+                if (hasPw || hasSw) {
+                    if (hasPw) quotaHtml += renderQuotaWindow('6h', clockIcon, pw.usedPercent, pw.resetAtTimestamp);
+                    if (hasSw) quotaHtml += renderQuotaWindow('7天', calendarIcon, sw.usedPercent, sw.resetAtTimestamp);
+                } else {
+                    const usedPercent = usage.summary?.usedPercent || 0;
+                    quotaHtml = renderQuotaWindow('配额', clockIcon, usedPercent, null);
+                }
+
+                return `
+                    <div class="usage-item" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                        <div class="usage-item-info">
+                            <div class="usage-item-avatar">${(item.email || '?')[0].toUpperCase()}</div>
+                            <div>
+                                <div class="usage-item-name">${escapeHtml(item.email || 'ID: ' + item.id)}</div>
+                                <div class="usage-item-plan">${escapeHtml(planType)}</div>
+                            </div>
+                        </div>
+                        <div style="padding: 0 4px;">
+                            ${quotaHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('usage-list').innerHTML = listHtml || '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">暂无用量数据</div>';
+        }
+
+        // ============ 批量导入 Token ============
+        function openBatchImportModal() {
+            document.getElementById('batch-import-tokens').value = '';
+            document.getElementById('batch-import-progress').style.display = 'none';
+            document.getElementById('batch-import-logs').innerHTML = '';
+            document.getElementById('batch-import-start-btn').disabled = false;
+            document.getElementById('batch-import-modal').classList.add('active');
+        }
+
+        function closeBatchImportModal() {
+            document.getElementById('batch-import-modal').classList.remove('active');
+        }
+
+        async function startBatchImport() {
+            const raw = document.getElementById('batch-import-tokens').value.trim();
+            if (!raw) {
+                showToast('请输入至少一个 Token', 'error');
+                return;
+            }
+
+            const tokens = [...new Set(
+                raw.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+            )];
+
+            if (tokens.length === 0) {
+                showToast('没有有效的 Token', 'error');
+                return;
+            }
+
+            const progressEl = document.getElementById('batch-import-progress');
+            const statusEl = document.getElementById('batch-import-status');
+            const countEl = document.getElementById('batch-import-count');
+            const barEl = document.getElementById('batch-import-bar');
+            const logsEl = document.getElementById('batch-import-logs');
+            const startBtn = document.getElementById('batch-import-start-btn');
+
+            progressEl.style.display = 'block';
+            startBtn.disabled = true;
+            logsEl.innerHTML = '';
+            let successCount = 0;
+            let failCount = 0;
+
+            for (let i = 0; i < tokens.length; i++) {
+                const token = tokens[i];
+                const name = 'codex_' + token.substring(0, 12).replace(/[^a-zA-Z0-9_]/g, '');
+                const pct = Math.round(((i + 1) / tokens.length) * 100);
+
+                countEl.textContent = `${i + 1} / ${tokens.length}`;
+                barEl.style.width = pct + '%';
+                statusEl.textContent = `导入中... (${successCount} 成功, ${failCount} 失败)`;
+
+                try {
+                    const res = await fetch('/api/codex/credentials', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + authToken
+                        },
+                        body: JSON.stringify({ name, refreshToken: token })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        successCount++;
+                        logsEl.innerHTML += `<div style="color: #22c55e;">✓ ${name}</div>`;
+                    } else {
+                        failCount++;
+                        logsEl.innerHTML += `<div style="color: #ef4444;">✗ ${name}: ${data.error || '失败'}</div>`;
+                    }
+                } catch (e) {
+                    failCount++;
+                    logsEl.innerHTML += `<div style="color: #ef4444;">✗ ${name}: ${e.message}</div>`;
+                }
+                logsEl.scrollTop = logsEl.scrollHeight;
+            }
+
+            statusEl.textContent = `完成: ${successCount} 成功, ${failCount} 失败`;
+            startBtn.disabled = false;
+            showToast(`批量导入完成: ${successCount} 成功, ${failCount} 失败`, successCount > 0 ? 'success' : 'error');
+            loadCredentials();
+            loadStatistics();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账号详情 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .detail-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .back-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .detail-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .detail-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .detail-value.mono {
+            font-family: monospace;
+            background: var(--bg-tertiary);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+        }
+
+        .detail-value.truncate {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background: var(--accent-success-bg);
+            color: var(--accent-success);
+        }
+
+        .status-badge.normal {
+            background: var(--accent-success-bg);
+            color: var(--accent-success);
+        }
+
+        .status-badge.warning {
+            background: var(--accent-warning-bg);
+            color: var(--accent-warning);
+        }
+
+        .status-badge.error {
+      background: var(--accent-danger-bg);
+            color: var(--accent-danger);
+        }
+
+        .provider-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .provider-badge.google {
+            background: rgba(66, 133, 244, 0.1);
+            color: #4285F4;
+        }
+
+        .provider-badge.github {
+            background: rgba(36, 41, 46, 0.1);
+            color: #24292e;
+        }
+
+        .usage-section {
+            margin-top: 16px;
+        }
+
+        .usage-bar-container {
+            margin-top: 12px;
+        }
+
+        .usage-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .usage-bar-fill {
+            height: 100%;
+            background: var(--accent-primary);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .usage-bar-fill.warning {
+            background: var(--accent-warning);
+        }
+
+        .usage-bar-fill.danger {
+            background: var(--accent-danger);
+        }
+
+        .usage-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .token-section {
+            position: relative;
+        }
+
+        .token-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .token-text {
+            flex: 1;
+            font-family: monospace;
+            background: var(--bg-tertiary);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .token-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .token-btn {
+            padding: 6px 10px;
+            background: var(ondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .token-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .token-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 48px;
+            color: var(--text-muted);
+        }
+
+      .loading-state .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .subscription-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            margin-bottom: 16px;
+        }
+
+        .subscription-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .subscription-badge.free {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+
+        .subscription-badge.pro {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .subscription-badge.pro-plus {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            color: #fff;
+        }
+
+        .subscription-badge.trial {
+            background: var(--accent-success-bg);
+            color: var(--accent-success);
+            border: 1px solid var(--accent-success);
+        }
+
+        .ban-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .ban-status.active {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .ban-status.banned {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .ban-status.checking {
+            background: rgba(234, 179, 8, 0.1);
+            color: #eab308;
+            border: 1px solid rgba(234, 179, 8, 0.2);
+        }
+
+        .ban-status svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .usage-breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .usage-breakdown-item {
+            text-align: center;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+        }
+
+        .usage-breakdown-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .usage-breakdown-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+            .usage-breakdown-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar will be injected by JS -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">账号详情</h1>
+                            <p class="page-subtitle" id="account-subtitle">加载中...</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <div class="detail-container">
+                    <!-- 返回按钮 -->
+                    <div class="detail-header">
+                        <button class="back-btn" onclick="goBack()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                            返回列表
+                        </button>
+                    </div>
+
+                    <!-- 加载状态 -->
+                    <div class="loading-state" id="loading-state">
+                        <div class="spinner"></div>
+                        <p>加载账号信息...</p>
+                    </d                    <!-- 账号详情内容 -->
+                    <div id="detail-content" style="display: none;">
+                        <!-- 基本信息 -->
+                        <div class="detail-card">
+                            <div class="detail-card-header">
+                                <h3 class="detail-card-title">基本信息</h3>
+                                <div class="action-buttons">
+                                    <button class="btn btn-secondary btn-sm" onclick="refreshToken()">
+                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" th="2">
+                                            <polyline points="23 4 23 10 17 10"/>
+                                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                        </svg>
+                                        刷新Token
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="testConnection()">
+                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                            <polyline points="22 4 12 14.01 9 11.01"/>
+                                        </svg>
+                                        测试连接
+                                    </button>
+                                    <button class="btn btn-warning btn-sm" onclick="checkBanStatus()">
+                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                        </svg>
+                                        封禁检测
+                                    </button>
+                                    <button class="btn btn-primary btn-sm" onclick="startChat()">
+                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                     </svg>
+                                        开始对话
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <span class="detail-label">账号名称</span>
+                                    <span class="detail-value" id="detail-name">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">邮箱</span>
+                                    <span class="detail-value" id="detail-email">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">提供商</span>
+                                    <span class="detail-value" id="detail-provider">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">认证方式</span>
+                                    <span class="detail-value" id="detail-auth-method">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">区域</span>
+                                    <span class="detail-value" id="detail-region">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">状态</span>
+                                    <span class="detail-value" id="detail-status">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">创建时间</span>
+                                    <span class="detail-value" id="detail-created">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Token过期时间</span>
+                                    <span class="detail-value" id="detail-expires">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 用量信息 -->
+                        <div class="detail-card">
+                            <div class="detail-card-header">
+                                <h3 class="detail-card-title">用量信息</h3>
+                                <button class="btn btn-secondary btn-sm" onclick="refreshUsage()">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="23 4 23 10 17 10"/>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                    </svg>
+                                    刷新用量
+                                </button>
+                            </div>
+                            <div id="ban-status-area"></div>
+                            <div id="subscription-area"></div>
+                            <div id="usage-content">
+                                <p style="color: var(--text-muted);">点击"刷新用量"获取最新数据</p>
+                            </div>
+                        </div>
+
+                        <!-- Token 信息 -->
+                        <div class="detail-card">
+                            <div class="detail-card-header">
+                                <h3 class="detail-card-title">Token 信息</h3>
+                            </div>
+                            <div class="detail-grid">
+                                <div class="detail-item full-width token-section">
+                                    <span class="detail-label">Access Token</span>
+                                    <div class="token-value">
+                                        <span class="token-text" id="detail-access-token">-</span>
+                                        <div class="token-actions">
+                                            <button class="token-btn" onclick="copyToken('access')" title="复制">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                                </svg>
+                                            </button>
+                                            <button class="token-btn" onclick="toggleToken('access')" title="显示/隐藏">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="access-eye-icon">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                    <circle cx="12" cy="12" r="3"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="detail-item full-width totion">
+                                    <span class="detail-label">Refresh Token</span>
+                                    <div class="token-value">
+                                        <span class="token-text" id="detail-refresh-token">-</span>
+                                        <div class="token-actions">
+                                            <button class="token-btn" onclick="copyToken('refresh')" title="复制">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                                </svg>
+                                            </button>
+                                            <button class="token-btn" onclick="toggleToken('refresh')" title="显示/隐藏">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="refresh-eye-icon">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                    <circle cx="12" cy="12" r="3"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="detail-item full-width token-section" id="profile-arn-section" style="display: none;">
+                                    <span class="dl">Profile ARN</span>
+                                    <div class="token-value">
+                                        <span class="token-text" id="detail-profile-arn">-</span>
+                                        <div class="token-actions">
+                                            <button class="token-btn" onclick="copyProfileArn()" title="复制">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 危险操作 -->
+                        <div class="detail-card" style="border-color: var(--accent-danger);">
+                            <div class="detail-card-header">
+                                <h3 class="detail-card-title" style="color: var(--accent-danger);">危险操作</h3>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-danger" onclick="deleteAccount()">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                        <line x1="10" y1="11" x2="10" y2="17"/>
+                                        <line x1="14" y1="11" x2="14" y2="17"/>
+                                    </svg>
+                                    删除账号
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="ter" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/account-detail.js"></script>
+</body>
+</html>

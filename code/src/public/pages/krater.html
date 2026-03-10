@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krater Key 管理 - All-2-API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="7.5 4.21 12 6.81 16.5 4.21"/>
+                                <polyline points="7.5 19.79 7.5 14.6 3 12"/>
+                                <polyline points="21 12 16.5 14.6 16.5 19.79"/>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                <line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">Krater Key 管理</h1>
+                            <p class="page-subtitle">管理 Krater AI API Key 池（支持 350+ AI 模型）</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-center">
+                    <div class="search-box">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="search-input" placeholder="搜索 Key...">
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-tabs">
+                        <button class="header-tab active" data-filter="all">全部 <span class="tab-count" id="tab-count-all">0</span></button>
+                        <button class="header-tab" data-filter="active">活跃 <span class="tab-count" id="tab-count-active">0</span></button>
+                        <button class="header-tab" data-filter="disabled">禁用 <span class="tab-count" id="tab-count-disabled">0</span></button>
+                        <button class="header-tab" data-filter="expired">过期 <span class="tab-count" id="tab-count-expired">0</span></button>
+                    </div>
+                    <button class="btn btn-primary" id="add-key-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加 Key
+                    </button>
+                    <button class="btn btn-secondary" id="batch-import-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        批量导入
+                    </button>
+                </div>
+            </header>
+
+            <!-- Statistics Cards -->
+            <div class="stats-cards" id="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">总 Key</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-active">0</div>
+                        <div class="stat-label">活跃</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-disabled">0</div>
+                        <div class="stat-label">已禁用</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon error">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="15" y1="9" x2="9" y2="15"/>
+                            <line x1="9" y1="9" x2="15" y2="15"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-expired">0</div>
+                        <div class="stat-label">已过期</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="stat-use-count">0</div>
+                        <div class="stat-label">总调用</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <div class="content-header">
+                    <div class="content-header-left">
+                        <span class="account-count">共 <strong id="displayed-count">0</strong> 个 Key</span>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table class="data-table" id="key-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>API Key</th>
+                                <th>状态</th>
+                                <th>使用次数</th>
+                                <th>失败</th>
+                                <th>最后使用</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="key-tbody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <h3 class="empty-title">暂无 Krater API Key</h3>
+                    <p class="empty-description">点击上方"添加 Key"或"批量导入"开始添加 Krater API Key</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Key Modal -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">添加 Krater API Key</h2>
+                <button class="modal-close" id="modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="add-key-form">
+                    <div class="form-group">
+                        <label class="form-label">API Key <span class="required">*</span></label>
+                        <textarea class="form-textarea" id="input-key" placeholder="输入 Krater API Key（kr_live_...）" required></textarea>
+                        <p class="form-hint">从 Krater.ai 获取的 API Key，格式为 kr_live_...</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <input type="text" class="form-input" id="input-note" placeholder="可选备注信息">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel">取消</button>
+                <button class="btn btn-primary" id="modal-submit">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    添加 Key
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Import Modal -->
+    <div class="modal-overlay" id="batch-import-modal">
+        <div class="modal" style="max-width: 640px;">
+            <div class="modal-header">
+                <h2 class="modal-title">批量导入 Krater API Key</h2>
+                <button class="modal-close" id="batch-modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">API Key 列表 <span class="required">*</span></label>
+                    <textarea class="form-textarea" id="batch-keys" style="min-height: 200px; font-family: monospace; font-size: 12px;" placeholder="每行一个 API Key（kr_live_...）"></textarea>
+                    <p class="form-hint">每行一个 API Key</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="batch-modal-cancel">取消</button>
+                <button class="btn btn-primary" id="batch-modal-submit">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    导入
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/krater.js"></script>
+</body>
+</html>

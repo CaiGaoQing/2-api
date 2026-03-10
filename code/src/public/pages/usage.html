@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用量统计 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">用量统计</h1>
+                            <p class="page-subtitle">查看 API 使用量和费用统计</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area" id="usage-page">
+                <div class="usage-filters">
+                    <div class="usage-filter-group">
+                        <label class="usage-filter-label">API Key</label>
+                        <select class="form-select usage-filter-input" id="usage-filter-key">
+                            <option value="">全部密钥</option>
+                        </select>
+                    </div>
+                    <div class="usage-filter-group">
+                        <label class="usage-filter-label">开始日期</label>
+                        <input type="date" class="form-input usage-filter-input" id="usage-filter-start">
+                    </div>
+                    <div class="usage-filter-group">
+                        <label class="usage-filter-label">结束日期</label>
+                        <input type="date" class="form-input usage-filter-input" id="usage-filter-end">
+                    </div>
+                    <div class="usage-filter-actions">
+                        <button class="btn btn-primary btn-sm" id="usage-search-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                            </svg>
+                            查询
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="usage-reset-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="1 4 1 10 7 10"/>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                            </svg>
+                            重置
+                        </button>
+                    </div>
+                </div>
+
+                <div class="usage-summary-grid">
+                    <div class="usage-summary-card">
+                        <div class="usage-summary-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                        </div>
+                        <div class="usage-summary-content">
+                            <div class="usage-summary-value" id="summary-requests">0</div>
+                            <div class="usage-summary-label">总请求数</div>
+                        </div>
+                    </div>
+                    <div class="usage-summary-card">
+                        <div class="usage-summary-icon success">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+                                <polyline points="16 7 22 7 22 13"/>
+                            </svg>
+                        </div>
+                        <div class="usage-summary-content">
+                            <div class="usage-summary-value" id="summary-input-tokens">0</div>
+                            <div class="usage-summary-label">输入 Tokens</div>
+                        </div>
+                    </div>
+                    <div class="usage-summary-card">
+                        <div class="usage-summary-icon info">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/>
+                                <polyline points="16 17 22 17 22 11"/>
+                            </svg>
+                        </div>
+                        <div class="usage-summary-content">
+                            <div class="usage-summary-value" id="summary-output-tokens">0</div>
+                            <div class="usage-summary-label">输出 Tokens</div>
+                        </div>
+                    </div>
+                    <div class="usage-summary-card highlight">
+                        <div class="usage-summary-icon warning">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2v20a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                        </div>
+                        <div class="usage-summary-content">
+                            <div class="usage-summary-value" id="summary-cost">$0.00</div>
+                            <div class="usage-summary-label">预估费用 (USD)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="usage-charts-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 24px;">
+                    <div class="usage-section" style="margin-bottom: 0;">
+                        <h3 class="usage-section-title">费用分布</h3>
+                        <div style="position: relative; height: 300px; padding: 16px;">
+                            <canvas id="cost-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="usage-section" style="margin-bottom: 0;">
+                        <h3 class="usage-section-title">请求数分布</h3>
+                        <div style="position: relative; height: 300px; padding: 16px;">
+                            <canvas id="requests-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="usage-section" style="margin-bottom: 24px;">
+                    <h3 class="usage-section-title">Token 使用趋势（每20分钟）</h3>
+                    <div style="position: relative; height: 350px; padding: 16px;">
+                        <canvas id="tokens-timeline-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3 class="usage-section-title">按 API Key 统计</h3>
+                    <div class="usage-table-wrapper">
+                        <table class="usage-table">
+                            <thead>
+                                <tr>
+                                    <th>API Key</th>
+                                    <th>名称</th>
+                                    <th>请求数</th>
+                                    <th>输入 Tokens</th>
+                                    <th>输出 Tokens</th>
+                           <th>总费用</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="key-stats-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/usage.js"></script>
+</body>
+</html>

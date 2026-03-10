@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>异常账号 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon" style="background: linear-gradient(135deg, var(--accent-danger), #dc2626);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">异常账号</h1>
+                            <p class="page-subtitle">管理 Token 刷新失败的账号</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area" id="error-accounts-page">
+                <div class="logs-filters" style="justify-content: flex-end;">
+                    <div class="logs-filter-actions">
+                        <button class="btn btn-primary btn-sm" id="refresh-all-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                            批量刷新
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="delete-all-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            清空全部
+                        </button>
+                    </div>
+                </div>
+
+                <div class="logs-table-wrapper">
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 200px;">邮箱</th>
+                                <th style="width: 100px;">认证方式</th>
+                                <th style="width: 100px;">区域</th>
+                                <th style="width: 180px;">失败时间</th>
+                                <th>错误原因</th>
+                                <th style="width: 180px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="error-accounts-list"></tbody>
+                    </table>
+                </div>
+
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <h3 class="empty-title">没有异常账号</h3>
+                    <p class="empty-description">所有账号运行正常</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/error-accounts.js"></script>
+</body>
+</html>

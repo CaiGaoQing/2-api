@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对话测试 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">对话测试</h1>
+                            <p class="page-subtitle" id="chat-subtitle">请先选择账号或设置 API</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area" id="chat-page" style="padding: 0; height: calc(100vh - var(--header-height));">
+                <div class="chat-container">
+                    <div class="chat-main" style="width: 100%;">
+                        <div class="chat-header">
+                            <div class="chat-header-info">
+                                <span class="chat-current-account" id="chat-current-account">直接对话</span>
+                                <select class="form-select" id="chat-model" style="width: 220px; padding: 8px 12px;">
+                                    <optgroup label="Claude (Kiro)">
+                                        <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                                        <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+                                        <option value="claude-opus-4-5-20251101">Claude Opus 4.5</option>
+                                        <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+                                    </optgroup>
+                                    <optgroup label="Gemini">
+                                        <option value="gemini-3-flash-preview">Gemini 3 Flash</option>
+                                        <option value="gemini-3-pro-preview">Gemini 3 Pro</option>
+                                        <option value="gemini-3-pro-image-preview">Gemini 3 Pro Image</option>
+                                        <option value="gemini-2.5-flash-preview">Gemini 2.5 Flash</option>
+                                        <option value="gemini-claude-sonnet-4-5">Gemini Claude Sonnet 4.5</option>
+                                        <option value="gemini-claude-sonnet-4-5-thinking">Gemini Claude Sonnet 4.5 Thinking</option>
+                                        <option value="gemini-claude-opus-4-5-thinking">Gemini Claude Opus 4.5 Thinking</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm" id="chat-settings-btn" title="API 设置">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"/>
+                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                    </svg>
+                                </button>
+                                <button class="btn btn-secondary btn-sm" id="chat-clear-btn">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                           空
+                                </button>
+                            </div>
+                        </div>
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="chat-welcome">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                                <h3>开始对话</h3>
+                                <p>输入消息开始与 Claude 对话</p>
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <div class="chat-input-wrapper">
+                                <textarea class="chat-input" id="chat-input" placeholder="输入消息..." rows="1"></textarea>
+                                <button class="chat-send-btn" id="chat-send-btn" disabled>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="22" y1="2" x2="11" y2="13"/>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Chat Settings Modal -->
+    <div class="modal-overlay" id="chat-settings-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">API 设置</h2>
+                <button class="modal-close" id="settings-modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">API 端点</label>
+                    <input type="text" class="form-input" id="chat-api-endpoint" placeholder="http://localhost:13000/claude-kiro-oauth/v1/messages">
+                    <p class="form-hint">留空则使用账号凭据直接调用</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">API Key</label>
+                    <input type="password" class="form-input" id="chat-api-key" placeholder="sk-...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="settings-modal-cancel">取消</button>
+                <button class="btn btn-primary" id="settings-modal-save">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/chat.js"></script>
+</body>
+</html>

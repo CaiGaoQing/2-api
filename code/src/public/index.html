@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiro Account Manager</title>
+    <script>
+        // 检查登录状态并重定向
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            window.location.href = '/login.html';
+        } else {
+            window.location.href = '/pages/accounts.html';
+        }
+    </script>
+</head>
+<body>
+    <p>正在跳转...</p>
+</body>
+</html>

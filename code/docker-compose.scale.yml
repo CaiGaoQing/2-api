@@ -1,0 +1,95 @@
+version: '3.8'
+
+# 动态扩展版本 - 使用外部数据库 + Host 网络模式
+# 用法:
+#   启动: docker-compose -f docker-compose.scale.yml up -d
+#   扩容: 修改下方 api 实例数量后重新 up
+#
+# 环境变量配置（可在 .env 文件中设置）:
+#   BALANCER_PORT  - 负载均衡器端口 (默认: 13003)
+#   MYSQL_HOST     - MySQL 主机地址 (默认: 127.0.0.1)
+#   MYSQL_PORT     - MySQL 端口 (默认: 3306)
+#   MYSQL_USER     - MySQL 用户名 (默认: root)
+#   MYSQL_PASSWORD - MySQL 密码 (必填)
+#   MYSQL_DATABASE - 数据库名 (默认: kiro_api)
+x-api-common: &api-common
+  build: .
+  restart: unless-stopped
+  network_mode: host
+  volumes:
+    - ../register:/register
+  environment: &api-env
+    TZ: Asia/Shanghai
+    MYSQL_HOST: ${MYSQL_HOST:-127.0.0.1}
+    MYSQL_PORT: ${MYSQL_PORT:-3306}
+    MYSQL_USER: ${MYSQL_USER:-root}
+    MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    MYSQL_DATABASE: ${MYSQL_DATABASE:-kiro_api}
+    # 代理配置 - 如果服务器不需要代理，留空即可
+    HTTP_PROXY: ${HTTP_PROXY:-}
+    HTTPS_PROXY: ${HTTPS_PROXY:-}
+    NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1}
+    # Grok 图片生成代理（必须配置才能访问 grok.com）
+    GROK_PROXY_URL: ${GROK_PROXY_URL:-${HTTPS_PROXY:-}}
+
+services:
+  balancer:
+    build: .
+    container_name: kiro-balancer
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - TZ=Asia/Shanghai
+      - BALANCER_PORT=${BALANCER_PORT:-13003}
+      - BACKEND_PORTS=13004,13005,13006,13007,13008
+    command: ["node", "src/cluster/balancer.js"]
+
+  api-1:
+    <<: *api-common
+    container_name: kiro-api-1
+    environment:
+      <<: *api-env
+      PORT: 13004
+
+  api-2:
+    <<: *api-common
+    container_name: kiro-api-2
+    environment:
+      <<: *api-env
+      PORT: 13005
+
+  api-3:
+    <<: *api-common
+    container_name: kiro-api-3
+    environment:
+      <<: *api-env
+      PORT: 13006
+
+  api-4:
+    <<: *api-common
+    container_name: kiro-api-4
+    environment:
+      <<: *api-env
+      PORT: 13007
+
+  api-5:
+    <<: *api-common
+    container_name: kiro-api-5
+    environment:
+      <<: *api-env
+      PORT: 13008
+
+  # 可选：API 监控服务
+  # 启用: docker-compose -f docker-compose.scale.yml up -d monitor
+  monitor:
+    build: .
+    container_name: kiro-monitor
+    restart: unless-stopped
+    network_mode: host
+    profiles:
+      - monitor
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./logs:/app/logs:ro
+    command: ["bash", "-c", "while true; do echo '=== API Monitor ===' && date && docker logs kiro-api-1 --tail 100 2>/dev/null | grep -E 'tool_call|tool_use|TokenGuard|error|401|403|429|500' | tail -20 && sleep 30; done"]

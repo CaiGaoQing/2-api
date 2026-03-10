@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通道管理 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* ===== Left-Right Split ===== */
+        .split-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* --- Left: channel list --- */
+        .ch-list-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            max-height: calc(100vh - 200px);
+            display: flex;
+            flex-direction: column;
+        }
+        .ch-list-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .ch-list-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .ch-list-body {
+            overflow-y: auto;
+            flex: 1;
+        }
+        .ch-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .ch-item:last-child { border-bottom: none; }
+        .ch-item:hover { background: var(--bg-tertiary); }
+        .ch-item.active { background: var(--bg-tertiary); border-left: 3px solid var(--accent-primary); }
+        .ch-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+        .ch-dot.on { background: #10b981; }
+        .ch-dot.off { background: #ef4444; }
+        .ch-info { flex: 1; min-width: 0; }
+        .ch-info-row {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .ch-info-name {
+            font-size: 13px; font-weight: 600; color: var(--text-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .ch-info-display {
+            font-size: 11px; color: var(--text-muted);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .ch-info-path {
+            font-size: 11px; font-family: 'SF Mono', monospace;
+            color: var(--text-secondary); background: var(--bg-primary);
+            padding: 1px 5px; border-radius: 3px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            max-width: 180px; display: inline-block; vertical-align: middle;
+        }
+        .ch-info-badge {
+            font-size: 10px; color: var(--text-muted);
+            background: rgba(99,102,241,0.08); padding: 1px 6px;
+            border-radius: 8px; white-space: nowrap; flex-shrink: 0;
+        }
+        .ch-item-actions {
+            display: flex; gap: 4px; flex-shrink: 0;
+        }
+        .ch-item-btn {
+            width: 28px; height: 28px; border: none; border-radius: 6px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+        }
+        .ch-item-btn.del { background: rgba(239,68,68,0.08); color: #ef4444; }
+        .ch-item-btn.del:hover { background: rgba(239,68,68,0.18); }
+
+        /* --- Right: detail/edit panel --- */
+        .ch-detail-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            min-height: 400px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        .ch-detail-empty {
+            display: flex; align-items: center; justify-content: center;
+            height: 400px; color: var(--text-muted); font-size: 14px;
+        }
+        .ch-detail-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid var(--border-color);
+        }
+        .ch-detail-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+        .ch-detail-body { padding: 20px; }
+
+        /* Form inside detail panel */
+        .form-group { margin-bottom: 14px; }
+        .form-label {
+            display: block; font-size: 12px; font-weight: 500;
+            color: var(--text-secondary); margin-bottom: 4px;
+        }
+        .form-input, .form-textarea, .form-select {
+            width: 100%; padding: 8px 10px; border: 1px solid var(--border-color);
+            border-radius: 6px; font-size: 13px; background: var(--bg-primary); color: var(--text-primary);
+        }
+        .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--accent-primary); }
+        .form-textarea { resize: vertical; min-height: 50px; font-family: inherit; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 80px; gap: 10px; }
+        .form-checkbox { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+        .form-checkbox input { width: 14px; height: 14px; }
+        .detail-footer {
+            display: flex; justify-content: flex-end; gap: 10px;
+            padding: 14px 20px; border-top: 1px solid var(--border-color);
+        }
+        .btn-cancel {
+            padding: 8px 18px; border: 1px solid var(--border-color); background: transparent;
+            color: var(--text-primary); border-radius: 6px; cursor: pointer; font-size: 13px;
+        }
+        .btn-cancel:hover { background: var(--bg-tertiary); }
+        .btn-save {
+            padding: 8px 18px; border: none;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+            color: white; border-radius: 6px; cursor: pointer; font-size: 13px;
+            box-shadow: 0 2px 8px var(--accent-primary-glow);
+        }
+        .btn-save:hover { transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-primary-glow); }
+
+        /* Models list in detail */
+        .models-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-color); }
+        .models-section-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+        }
+        .models-section-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .model-head, .model-row {
+            display: grid; grid-template-columns: 1fr 90px 90px 32px; gap: 6px;
+            align-items: center; margin-bottom: 6px;
+        }
+        .model-head span { font-size: 11px; color: var(--text-muted); }
+        .model-row input {
+            padding: 5px 7px; border: 1px solid var(--border-color); border-radius: 5px;
+            font-size: 12px; background: var(--bg-primary); color: var(--text-primary);
+        }
+        .model-row input:focus { outline: none; border-color: var(--accent-primary); }
+        .model-remove {
+            width: 26px; height: 26px; border: none; background: rgba(239,68,68,0.08);
+            color: #ef4444; border-radius: 5px; cursor: pointer; font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .model-remove:hover { background: rgba(239,68,68,0.18); }
+
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--text-secondary);
+        }
+
+        @media (max-width: 900px) {
+            .split-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" id="sidebar"></nav>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2 20h.01"/>
+                                <path d="M7 20v-4"/>
+                                <path d="M12 20v-8"/>
+                                <path d="M17 20V8"/>
+                                <path d="M22 4v16"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">通道管理</h1>
+                            <p class="page-subtitle">配置通道地址、说明和支持的模型定价 · <span id="statsText">0 通道 / 0 模型</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-secondary" onclick="loadChannels()">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                            <path d="M3 21v-5h5"/>
+                        </svg>
+                        刷新
+                    </button>
+                    <button class="btn btn-primary" onclick="openAdd()">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加通道
+                    </button>
+                </div>
+            </header>
+
+            <div class="split-layout">
+                <!-- Left: channel list -->
+                <div class="ch-list-panel">
+                    <div class="ch-list-header">
+                        <span class="ch-list-title" id="listTitle">通道列表</span>
+                        <button class="btn btn-primary" style="padding:5px 12px;font-size:12px" onclick="openAdd()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            添加
+                        </button>
+                    </div>
+                    <div class="ch-list-body" id="ch-list"></div>
+                </div>
+
+                <!-- Right: detail/edit -->
+                <div class="ch-detail-panel" id="detail-panel">
+                    <div class="ch-detail-empty" id="detail-empty">点击左侧通道查看详情，或添加新通道</div>
+                    <div id="detail-content" style="display:none">
+                        <div class="ch-detail-header">
+                            <span class="ch-detail-title" id="detail-title">编辑通道</span>
+                        </div>
+                        <div class="ch-detail-body">
+                            <input type="hidden" id="f-id">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">通道标识 *</label>
+                                    <input class="form-input" id="f-name" placeholder="如 orchids">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">显示名称</label>
+                                    <input class="form-input" id="f-displayName" placeholder="如 Orchids 格式">
+                                </div>
+                            </div>
+                            <div class="form-row-3">
+                                <div class="form-group">
+                                    <label class="form-label">API 路径</label>
+                                    <input class="form-input" id="f-apiPath" placeholder="/orchids/v1/messages">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">说明</label>
+                                    <input class="form-input" id="f-description" placeholder="通道说明">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">排序</label>
+                                    <input class="form-input" id="f-sortOrder" type="number" value="0">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-checkbox">
+                                    <input type="checkbox" id="f-isActive" checked>
+                                    <span>启用</span>
+                                </label>
+                            </div>
+
+                            <div class="models-section">
+                                <div class="models-section-header">
+                                    <span class="models-section-title">支持模型</span>
+                                    <button class="btn btn-primary" style="padding:4px 10px;font-size:11px" onclick="addModelRow()">+ 添加</button>
+                                </div>
+                                <div class="model-head">
+                                    <span>模型名称</span><span>输入价格</span><span>输出价格</span><span></span>
+                                </div>
+                                <div id="models-list"></div>
+                            </div>
+                        </div>
+                        <div class="detail-footer">
+                            <button class="btn-cancel" onclick="cancelEdit()">取消</button>
+                            <button class="btn-save" onclick="saveChannel()">保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="/js/common.js"></script>
+    <script src="/js/channels.js"></script>
+</body>
+</html>

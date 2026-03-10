@@ -1,0 +1,9 @@
+# 注册脚本（含敏感信息）
+register/
+
+# IDE
+.idea/
+.DS_Store
+
+# Node
+node_modules/

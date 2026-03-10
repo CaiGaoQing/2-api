@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代理设置 - Kiro Account Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .settings-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .settings-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .settings-card-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-light);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+        .settings-card-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+        .settings-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .settings-card-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .settings-row:last-child {
+            border-bottom: none;
+        }
+        .settings-row-left {
+            flex: 1;
+        }
+        .settings-row-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .settings-row-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .settings-row-right {
+            margin-left: 24px;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+        .proxy-input-group {
+            margin-top: 16px;
+        }
+        .proxy-input-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        .proxy-input-wrapper {
+            flex: 1;
+        }
+        .proxy-input-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: block;
+        }
+        .proxy-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .proxy-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .proxy-input::placeholder {
+            color: var(--text-tertiary);
+        }
+        .proxy-hint {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 8px;
+        }
+        .proxy-hint code {
+            background: var(--bg-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .test-result {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+        }
+        .test-result.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+            display: block;
+        }
+        .test-result.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            display: block;
+        }
+        .test-result.loading {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #3b82f6;
+            display: block;
+        }
+        .btn-test {
+            white-space: nowrap;
+        }
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-indicator.enabled {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+        .status-indicator.disabled {
+            background: rgba(107, 114, 128, 0.1);
+            color: #6b7280;
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar will be injected by JS -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">代理设置</h1>
+                            <p class="page-subtitle">配置 API 请求的代理服务器</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <span class="status-indicator disabled" id="proxy-status">
+                        <span class="status-dot"></span>
+                        <span id="proxy-status-text">未启用</span>
+                    </span>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div class="settings-card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="settings-card-title">HTTP 代理配置</div>
+                            <div class="settings-card-subtitle">配置代理服务器用于刷新 Token、获取用量、对话等 API 请求</div>
+                        </div>
+                    </div>
+
+                    <div class="settings-row">
+                        <div class="settings-row-left">
+                            <div class="settings-row-label">启用代理</div>
+                            <div class="settings-row-desc">开启后，所有 API 请求将通过代理服务器发送</div>
+                        </div>
+                        <div class="settings-row-right">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="proxy-enabled">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="proxy-input-group">
+                        <label class="proxy-input-label">代理地址</label>
+                        <div class="proxy-input-row">
+                            <div class="proxy-input-wrapper">
+                                <input type="text" class="proxy-input" id="proxy-url" placeholder="host:port:username:password 或 http://user:pass@host:port">
+                            </div>
+                            <button class="btn btn-secondary btn-test" id="test-proxy-btn">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                                测试连接
+                            </button>
+                        </div>
+                        <div class="proxy-hint">
+                            支持格式：<code>host:port:username:password</code> (ISP格式) 或 <code>http://username:password@host:port</code>
+                        </div>
+                        <div class="test-result" id="test-result"></div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div class="settings-card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                   </div>
+                        <div>
+                            <div class="settings-card-title">使用说明</div>
+                            <div class="settings-card-subtitle">代理配置的使用方法和注意事项</div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 14px; color: var(--text-secondary); line-height: 1.8;">
+                        <p><strong>代理将应用于以下操作：</strong></p>
+                        <ul style="margin: 12px 0; padding-left: 20px;">
+                            <li>刷新 Token (Social/Builder ID/IdC)</li>
+                            <li>获取账号用量信息</li>
+                            <li>对话请求 (流式和非流式)</li>
+                            <li>获取可用模型列表</li>
+                        </ul>
+                        <p style="margin-top: 16px;"><strong>ISP 代理格式示例：</strong></p>
+                        <code style="display: block; background: var(--bg-secondary); padding: 12px; border-radius: 6px; margin-top: 8px;">
+                            38.111.61.65:443:NNDyNdwnJkFt:ykWE3acywd
+                        </code>
+                        <p style="margin-top: 16px;"><strong>标准 HTTP 代理格式：</strong></p>
+                        <code style="display: block; background: var(--bg-secondary); padding: 12px; border-radius: 6px; margin-top: 8px;">
+                            http://username:password@proxy.example.com:8080
+                        </code>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button class="btn btn-secondary" id="reset-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"/>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                        </svg>
+                        重置
+                    </button>
+                    <button class="btn btn-primary" id="save-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        保存配置
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script>
+        // 初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 检查登录状态
+            if (!await checkAuth()) return;
+
+            // 加载侧边栏
+            document.getElementById('sidebar-container').innerHTML = getSidebarHTML();
+            initSidebar('proxy');
+            updateSidebarStats();
+
+            // 加载代理配置
+            loadProxyConfig();
+
+          // 绑定事件
+            document.getElementById('test-proxy-btn').addEventListener('click', testProxy);
+            document.getElementById('save-btn').addEventListener('click', saveConfig);
+            document.getElementById('reset-btn').addEventListener('click', resetConfig);
+            document.getElementById('proxy-enabled').addEventListener('change', updateStatus);
+        });
+
+        // 加载代理配置
+        async function loadProxyConfig() {
+            try {
+                const res = await fetch('/api/proxy/config', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await res.json();
+
+                if (result.success && result.data) {
+                    document.getElementById('proxy-enabled').checked = result.data.enabled;
+                    document.getElementById('proxy-url').value = result.data.proxyUrl || '';
+                    updateStatus();
+                }
+            } catch (e) {
+                console.error('Load proxy config error:', e);
+            }
+        }
+
+        // 更新状态显示
+        function updateStatus() {
+            const enabled = document.getElementById('proxy-enabled').checked;
+            const statusEl = document.getElementById('proxy-status');
+            const statusText = document.getElementById('proxy-status-text');
+
+            if (enabled) {
+                statusEl.className = 'status-indicator enabled';
+                statusText.textContent = '已启用';
+            } else {
+                statusEl.className = 'status-indicator disabled';
+                statusText.textContent = '未启用';
+            }
+        }
+
+        // 测试代理连接
+        async function testProxy() {
+            const proxyUrl = document.getElementById('proxy-url').value.trim();
+            const resultEl = document.getElementById('test-result');
+
+            if (!proxyUrl) {
+                showToast('请输入代理地址', 'warning');
+                return;
+            }
+
+            resultEl.className = 'test-result loading';
+            resultEl.textContent = '正在测试连接...';
+
+            try {
+                const res = await fetch('/api/proxy/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ proxyUrl })
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    resultEl.className = 'test-result success';
+                    resultEl.textContent = result.message;
+                    showToast('代理连接成功', 'success');
+                } else {
+                    resultEl.className = 'test-result error';
+                    resultEl.textContent = result.message || '连接失败';
+                    showToast('代理连接失败', 'error');
+                }
+            } catch (e) {
+                resultEl.className = 'test-result error';
+                resultEl.textContent = '测试请求失败: ' + e.message;
+                showToast('测试请求失败', 'error');
+            }
+        }
+
+        // 保存配置
+        async function saveConfig() {
+            const enabled = document.getElementById('proxy-enabled').checked;
+            const proxyUrl = document.getElementById('proxy-url').value.trim();
+
+            if (enabled && !proxyUrl) {
+                showToast('启用代理时必须填写代理地址', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/proxy/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ enabled, proxyUrl })
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    showToast(result.message || '配置已保存', 'success');
+                    updateStatus();
+                } else {
+                    showToast(result.error || '保存失败', 'error');
+                }
+            } catch (e) {
+                showToast('保存请求失败: ' + e.message, 'error');
+            }
+        }
+
+        // 重置配置
+        function resetConfig() {
+            document.getElementById('proxy-enabled').checked = false;
+            document.getElementById('proxy-url').value = '';
+            document.getElementById('test-result').className = 'test-result';
+            document.getElementById('test-result').textContent = '';
+            updateStatus();
+            showToast('配置已重置，请点击保存以应用', 'info');
+        }
+    </script>
+</body>
+</html>

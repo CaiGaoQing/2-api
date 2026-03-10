@@ -1,0 +1,436 @@
+/* docs.css - 接入教程页面样式 */
+
+.public-page {
+    min-height: 100vh;
+    background: var(--bg-primary);
+}
+
+.public-header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.public-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.public-logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-purple) 100%);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    color: white;
+}
+
+.public-logo-text {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.public-nav {
+    display: flex;
+    gap: 24px;
+}
+
+.public-nav a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color var(--transition-fast);
+}
+
+.public-nav a:hover,
+.public-nav a.active {
+    color: var(--text-primary);
+}
+
+.public-content {
+    padding: 40px 60px;
+    width: 100%;
+}
+
+/* 文档头部 */
+.docs-header {
+    margin-bottom: 40px;
+}
+
+.docs-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.docs-subtitle {
+    font-size: 16px;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+/* 接入类型卡片 */
+.integration-types {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.integration-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: center;
+}
+
+.integration-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+}
+
+.integration-card.active {
+    border-color: var(--accent-primary);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+}
+
+.integration-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.integration-card.active .integration-icon {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+}
+
+.integration-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.integration-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* 接入内容区域 */
+.integration-content {
+    display: none !important;
+}
+
+.integration-content.active {
+    display: block !important;
+}
+
+.integration-content .docs-section:last-child {
+    margin-bottom: 0;
+}
+
+/* 文档章节 */
+.docs-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    margin-bottom: 24px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-title .step-number {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+}
+
+.section-content {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.section-content p {
+    margin-bottom: 16px;
+}
+
+.section-content ul {
+    margin: 16px 0;
+    padding-left: 24px;
+}
+
+.section-content li {
+    margin-bottom: 8px;
+}
+
+/* 代码块 */
+.code-block {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+    position: relative;
+}
+
+.code-block pre {
+    margin: 0;
+    font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    white-space: pre;
+}
+
+.code-block .copy-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.code-block .copy-btn:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+}
+
+.code-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+/* 端点框 */
+.endpoint-box {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin: 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.endpoint-method {
+    background: var(--accent-success);
+    color: white;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.endpoint-url {
+    font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* 信息框 */
+.info-box {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin: 16px 0;
+    display: flex;
+    gap: 12px;
+}
+
+.info-box svg {
+    width: 20px;
+    height: 20px;
+    color: #3b82f6;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.info-box-content {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* 警告框 */
+.warning-box {
+    background: var(--accent-warning-bg);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin: 16px 0;
+    display: flex;
+    gap: 12px;
+}
+
+.warning-box svg {
+    width: 20px;
+    height: 20px;
+    color: var(--accent-warning);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.warning-box-content {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* 模型表格 */
+.model-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+}
+
+.model-table th {
+    background: var(--bg-tertiary);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.model-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.model-table tr:last-child td {
+    border-bottom: none;
+}
+
+.model-name {
+    font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+    font-size: 13px;
+    color: var(--accent-primary);
+}
+
+/* Tab 容器 */
+.tab-container {
+    margin: 16px 0;
+}
+
+.tab-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    padding: 8px 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.tab-btn:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+    border-color: transparent;
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* 响应式布局 */
+@media (max-width: 900px) {
+    .integration-types {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .public-header {
+        padding: 16px 20px;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .public-content {
+        padding: 20px;
+    }
+
+    .docs-section {
+        padding: 20px;
+    }
+
+    .endpoint-box {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .integration-types {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outlook 邮箱管理 - All-2-API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .outlook-gradient { background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%); }
+        .outlook-icon { background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%); }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.2s ease;
+        }
+        .stat-card:hover { border-color: #0078d4; box-shadow: 0 4px 12px rgba(0, 120, 212, 0.1); }
+        .stat-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: linear-gradient(135deg, rgba(0, 120, 212, 0.1) 0%, rgba(0, 120, 212, 0.05) 100%);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .stat-icon svg { width: 24px; height: 24px; stroke: #0078d4; }
+        .stat-icon.success { background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%); }
+        .stat-icon.success svg { stroke: #22c55e; }
+        .stat-icon.danger { background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%); }
+        .stat-icon.danger svg { stroke: #ef4444; }
+        .stat-icon.warning { background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%); }
+        .stat-icon.warning svg { stroke: #f59e0b; }
+        .stat-content { flex: 1; min-width: 0; }
+        .stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+        .stat-label { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+        .content-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 0 4px; }
+        .content-header-left { display: flex; align-items: center; gap: 16px; }
+        .account-count { font-size: 14px; color: var(--text-secondary); }
+        .account-count strong { color: var(--text-primary); font-weight: 600; }
+
+        .table-container { overflow-x: auto; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-color); }
+        .data-table td { padding: 12px 14px; font-size: 14px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); }
+        .data-table tbody tr:hover { background: var(--hover-bg, rgba(0, 120, 212, 0.03)); }
+
+        .cell-mono { font-family: monospace; font-size: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+        .cell-mono:hover { color: #0078d4; }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+        .status-badge.active { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+        .status-badge.disabled { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .status-badge.expired { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .action-btns { display: flex; gap: 6px; }
+        .action-btn { padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); color: var(--text-secondary); cursor: pointer; font-size: 12px; transition: all 0.15s ease; }
+        .action-btn:hover { border-color: #0078d4; color: #0078d4; }
+        .action-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.2s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal { background: var(--card-bg); border-radius: 16px; width: 90%; max-width: 500px; max-height: 90vh; overflow: auto; }
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .modal-title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+        .modal-close { background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px; }
+        .form-input, .form-textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-primary); font-size: 14px; box-sizing: border-box; }
+        .form-input:focus, .form-textarea:focus { outline: none; border-color: #0078d4; }
+        .form-textarea { min-height: 100px; resize: vertical; font-family: monospace; }
+        .form-hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        .required { color: #ef4444; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+        .empty-icon { width: 64px; height: 64px; margin: 0 auto 16px; opacity: 0.5; }
+        .empty-title { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+        .empty-description { font-size: 14px; margin-bottom: 20px; }
+
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; color: white; font-size: 14px; z-index: 2000; transform: translateY(100px); opacity: 0; transition: all 0.3s ease; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: #22c55e; }
+        .toast.error { background: #ef4444; }
+
+        /* Mail Modal Styles */
+        .mail-modal .modal-overlay { background: var(--bg-primary, #f5f5f5); }
+        .mail-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-primary, #f5f5f5); z-index: 1000; display: none; flex-direction: column; }
+        .mail-modal.active { display: flex; }
+        .mail-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border-color); background: var(--card-bg); }
+        .mail-modal-header h2 { font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 0; }
+        .mail-modal-close { background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 6px; border-radius: 6px; }
+        .mail-modal-close:hover { background: rgba(0,0,0,0.05); }
+
+        .mail-tabs { display: flex; border-bottom: 2px solid var(--border-color); background: var(--card-bg); padding: 0 24px; }
+        .mail-tab { padding: 12px 20px; font-size: 14px; font-weight: 500; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s ease; background: none; border-top: none; border-left: none; border-right: none; }
+        .mail-tab:hover { color: var(--text-primary); }
+        .mail-tab.active { color: #0078d4; border-bottom-color: #0078d4; }
+        .mail-tab .tab-badge { display: inline-block; background: rgba(0, 120, 212, 0.1); color: #0078d4; font-size: 11px; padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
+
+        .mail-tab-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+        .mail-tab-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+        .mail-tab-panel.active { display: flex; }
+
+        .mail-toolbar { display: flex; align-items: center; gap: 12px; padding: 12px 24px; flex-wrap: wrap; background: var(--card-bg); border-bottom: 1px solid var(--border-color); }
+        .mail-toolbar .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-secondary); transition: all 0.15s ease; }
+        .mail-toolbar .btn-sm:hover { border-color: #0078d4; color: #0078d4; }
+        .mail-toolbar .btn-sm.danger { color: #ef4444; border-color: #ef4444; }
+        .mail-toolbar .btn-sm.danger:hover { background: #ef4444; color: white; }
+        .mail-info { font-size: 13px; color: var(--text-secondary); margin-left: auto; }
+
+        .mail-list { flex: 1; overflow-y: auto; padding: 0 24px; }
+        .mail-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.1s ease; border-radius: 8px; margin-bottom: 2px; }
+        .mail-item:hover { background: var(--hover-bg, rgba(0, 120, 212, 0.03)); }
+        .mail-item.unread { font-weight: 600; }
+        .mail-item-dot { width: 8px; height: 8px; border-radius: 50%; background: #0078d4; flex-shrink: 0; margin-top: 6px; }
+        .mail-item.unread .mail-item-dot { display: block; }
+        .mail-item:not(.unread) .mail-item-dot { background: transparent; }
+        .mail-item-content { flex: 1; min-width: 0; }
+        .mail-item-subject { font-size: 14px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mail-item-from { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        .mail-item-date { font-size: 12px; color: var(--text-secondary); flex-shrink: 0; }
+        .mail-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+        .mail-item-actions button { background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; border-radius: 4px; }
+        .mail-item-actions button:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+        .mail-empty { text-align: center; padding: 40px 20px; color: var(--text-secondary); font-size: 14px; }
+        .mail-loading { text-align: center; padding: 40px 20px; color: var(--text-secondary); font-size: 14px; }
+
+        /* Mail Content View */
+        .mail-content-view { display: none; flex: 1; flex-direction: column; overflow: hidden; padding: 16px 24px; }
+        .mail-content-view.active { display: flex; }
+        .mail-content-header { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+        .mail-content-subject { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+        .mail-content-meta { font-size: 13px; color: var(--text-secondary); }
+        .mail-content-meta span { margin-right: 16px; }
+        .mail-content-body { font-size: 14px; color: var(--text-primary); line-height: 1.6; white-space: pre-wrap; word-break: break-word; flex: 1; overflow-y: auto; padding: 12px; background: var(--input-bg, #f9f9f9); border-radius: 8px; }
+        .mail-back-btn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); color: var(--text-secondary); cursor: pointer; font-size: 13px; margin-bottom: 12px; flex-shrink: 0; }
+        .mail-back-btn:hover { border-color: #0078d4; color: #0078d4; }
+
+        @media (max-width: 768px) {
+            .stats-cards { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="page-title-section">
+                        <div class="page-icon outlook-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="page-title">Outlook 邮箱管理</h1>
+                            <p class="page-subtitle">管理 Outlook 邮箱账号池</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-center">
+                    <div class="search-box" style="position:relative;">
+                        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--text-secondary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="search-input" placeholder="搜索邮箱..." style="width:100%;padding:8px 12px 8px 36px;border:1px solid var(--border-color);border-radius:8px;background:var(--input-bg,var(--card-bg));color:var(--text-primary);font-size:14px;">
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-primary" id="add-btn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        添加账号
+                    </button>
+                    <button class="btn btn-secondary" id="batch-import-btn" style="background:linear-gradient(135deg,#0078d4,#005a9e);color:white;border:none;">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        粘贴导入
+                    </button>
+                </div>
+            </header>
+
+            <!-- Statistics Cards -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="outlook-stat-total">0</div>
+                        <div class="stat-label">总账号</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="outlook-stat-active">0</div>
+                        <div class="stat-label">活跃</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon danger">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="outlook-stat-disabled">0</div>
+                        <div class="stat-label">停用</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="outlook-stat-expired">0</div>
+                        <div class="stat-label">过期</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <div class="content-header">
+                    <div class="content-header-left">
+                        <span class="account-count">共 <strong id="displayed-count">0</strong> 个账号</span>
+                    </div>
+                    <div class="content-header-right">
+                        <select id="status-filter" class="form-select" style="width:auto;font-size:13px;padding:4px 8px;border:1px solid var(--border-color);border-radius:6px;background:var(--card-bg);color:var(--text-primary);">
+                            <option value="all">全部状态</option>
+                            <option value="active">活跃</option>
+                            <option value="disabled">停用</option>
+                            <option value="expired">过期</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table class="data-table" id="account-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>邮箱</th>
+                                <th>密码</th>
+                                <th>Client ID</th>
+                                <th>Refresh Token</th>
+                                <th>状态</th>
+                                <th>备注</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="account-tbody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    <h3 class="empty-title">暂无 Outlook 邮箱</h3>
+                    <p class="empty-description">点击上方"添加账号"或"粘贴导入"开始添加邮箱</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title-text">添加 Outlook 账号</h2>
+                <button class="modal-close" id="modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-id" value="">
+                <div class="form-group">
+                    <label class="form-label">邮箱 <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="input-email" placeholder="example@outlook.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="text" class="form-input" id="input-password" placeholder="可选">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Client ID (UUID)</label>
+                    <input type="text" class="form-input" id="input-client-id" placeholder="可选">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Refresh Token</label>
+                    <textarea class="form-textarea" id="input-refresh-token" placeholder="可选" style="min-height:80px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">备注</label>
+                    <input type="text" class="form-input" id="input-note" placeholder="可选备注信息">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel">取消</button>
+                <button class="btn btn-primary" id="modal-submit">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Import Modal -->
+    <div class="modal-overlay" id="batch-import-modal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 class="modal-title">粘贴导入 Outlook 邮箱</h2>
+                <button class="modal-close" id="batch-modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">账号列表 <span class="required">*</span></label>
+                    <textarea class="form-textarea" id="batch-input" style="min-height: 250px; font-family: monospace; font-size: 12px;" placeholder="每行一个账号，格式：邮箱----密码----UUID----RefreshToken&#10;&#10;示例：&#10;user@outlook.com----password123----9e5f94bc-e8a4-4e73-b8be-63364c29d753----M.C520_SN1..."></textarea>
+                    <p class="form-hint">每行一个账号，用 ---- 分隔各字段。支持 1~4 个字段：邮箱(必填)、密码、Client ID、Refresh Token。已存在的邮箱将自动更新。</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="batch-modal-cancel">取消</button>
+                <button class="btn btn-primary" id="batch-modal-submit" style="background:linear-gradient(135deg,#0078d4,#005a9e);">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    导入
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mail Modal (Full Screen, Opaque, Tabs) -->
+    <div class="mail-modal" id="mail-modal">
+        <div class="mail-modal-header">
+            <h2 id="mail-modal-title">邮件</h2>
+            <button class="mail-modal-close" id="mail-modal-close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="mail-tabs">
+            <button class="mail-tab active" data-folder="INBOX">收件箱 <span class="tab-badge" id="inbox-badge">0</span></button>
+            <button class="mail-tab" data-folder="Junk">垃圾箱 <span class="tab-badge" id="junk-badge">0</span></button>
+        </div>
+
+        <!-- Tab: INBOX -->
+        <div class="mail-tab-panel active" id="panel-INBOX">
+            <div class="mail-toolbar">
+                <button class="btn-sm" id="mail-refresh-INBOX">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;">
+                        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                    </svg>
+                    刷新
+                </button>
+                <button class="btn-sm danger" id="mail-delete-all-INBOX">删除全部</button>
+                <span class="mail-info" id="mail-info-INBOX"></span>
+            </div>
+            <div class="mail-list" id="mail-list-INBOX">
+                <div class="mail-loading">加载中...</div>
+            </div>
+        </div>
+
+        <!-- Tab: Junk -->
+        <div class="mail-tab-panel" id="panel-Junk">
+            <div class="mail-toolbar">
+                <button class="btn-sm" id="mail-refresh-Junk">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;">
+                        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                    </svg>
+                    刷新
+                </button>
+                <button class="btn-sm danger" id="mail-delete-all-Junk">删除全部</button>
+                <span class="mail-info" id="mail-info-Junk"></span>
+            </div>
+            <div class="mail-list" id="mail-list-Junk">
+                <div class="mail-loading">加载中...</div>
+            </div>
+        </div>
+
+        <!-- Mail Content View (shared) -->
+        <div class="mail-content-view" id="mail-content-view">
+            <button class="mail-back-btn" id="mail-back-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+                返回列表
+            </button>
+            <div class="mail-content-header">
+                <div class="mail-content-subject" id="mail-view-subject"></div>
+                <div class="mail-content-meta">
+                    <span id="mail-view-from"></span>
+                    <span id="mail-view-date"></span>
+                </div>
+            </div>
+            <div class="mail-content-body" id="mail-view-body"></div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/outlook.js"></script>
+</body>
+</html>

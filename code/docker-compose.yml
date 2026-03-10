@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # Kiro API 服务
+  kiro-api:
+    build: .
+    container_name: kiro-api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-13003}:13003"
+    environment:
+      - PORT=13003
+      - TZ=Asia/Shanghai
+      - MYSQL_HOST=${MYSQL_HOST:-mysql}
+      - MYSQL_PORT=${MYSQL_PORT:-3306}
+      - MYSQL_USER=${MYSQL_USER:-root}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-kiro123456}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-kiro_api}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - kiro-network
+
+  # MySQL 数据库（可选，如果使用外部数据库可以注释掉）
+  mysql:
+    image: mysql:8.0
+    container_name: kiro-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD:-kiro123456}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-kiro_api}
+      - TZ=Asia/Shanghai
+    ports:
+      - "${MYSQL_EXTERNAL_PORT:-13306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_PASSWORD:-kiro123456}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - kiro-network
+
+networks:
+  kiro-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
