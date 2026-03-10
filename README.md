@@ -203,7 +203,7 @@ docker-compose -f docker-compose.external-db.yml up -d
 
 ---
 ### 联系群主
-![联系群主](my.jpg)
+![联系群主](images/my.jpg)
 
 ### 界面截图
 
