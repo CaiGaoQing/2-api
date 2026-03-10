@@ -62,7 +62,7 @@ ALL-2-API 是一个突破客户端限制的 API 代理服务，将原本仅限�
 
 ---
 
-## �📑 快速导航
+## � 快速导航
 
 - [💡 核心优势](#-核心优势)
 - [🚀 快速开始](#-快速开始)
@@ -203,7 +203,7 @@ docker-compose -f docker-compose.external-db.yml up -d
 
 ---
 ### 联系群主
-![030584c322cd8683fad1ddcc43051550](https://github.com/user-attachments/assets/708841bb-41f8-4e27-9e1a-e9a4a8ed0c00)
+![联系群主](my.jpg)
 
 ### 界面截图
 
